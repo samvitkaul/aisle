@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=80.9", "wheel", "cython>=3.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: unit tests",
+    "slow: slow unit tests",
+    "integration: integration tests",
+]
+testpaths = ["test"]
+pythonpath = "."
+addopts = "--durations=0"
+
+[project]
+name = "aisle"
+version = "0.0.0"
+requires-python = ">= 3.12"
+
+[tool.setuptools]
+packages = []
+py-modules = []
+
+[tool.mypy]
+check_untyped_defs = true
+explicit_package_bases = true
+exclude = "^__.*/|^test|^tools|^setup\\.py$"
+# disallow_untyped_calls = true
+# disallow_untyped_defs = true
+warn_unreachable = true
+allow_untyped_globals = true
+
+[[tool.mypy.overrides]]
+module = "src.utils._sym_c"
+ignore_missing_imports = true
+
+[tool.coverage.run]
+branch = true
+omit = ["test/*"]
+parallel = true    # Enable data collection from sub-processes called through tests
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+    "if DEBUG",
+
+    # Don't complain about TYPE_CHECKING code
+    "if TYPE_CHECKING",
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+    ]
+[tool.coverage.html]
+# Output directory, prefix __ to ensure it is ignored by .gitignore
+directory = "__htmlcov"
+
+[tool.isort]
+force_to_top = ["sys" , "os"]
+honor_noqa = true
+line_length = 120
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+
+[tool.ruff.format]
+quote-style = "single"
+skip-magic-trailing-comma = true    # Avoid always splitting function arguments (in definitions) one per line
+
+[tool.ruff.lint]
+extend-select = ["W291", "W293"]
+
+[tool.ruff.lint.per-file-ignores]
+"test/**" = [
+   "E701", #Multiple statements on one line
+   "E702", #Multiple statements on one line (semicolon)
+   "F841", #Unused variables
+   "E741", #Ambiguous variable names
+   "E402", #Import not on top
+]
