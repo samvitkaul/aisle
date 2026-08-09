@@ -3,12 +3,14 @@ import csv
 import json
 from collections.abc import KeysView
 from functools import reduce
+from operator import mul
+from pathlib import Path
 from typing import Any
 
 import yaml
 
 
-def prod_ints(L: List[int]) -> int:
+def prod_ints(L: list[int]) -> int:
     return reduce(mul, L, 1)
 
 def str_to_bool(s):
@@ -26,7 +28,7 @@ def str_to_bool(s):
         raise ValueError('expecting boolean value')
 
 def parse_csv(csvfilename):
-    with open(locator_handle(csvfilename)) as fcsv:
+    with open(csvfilename, 'r') as fcsv:
         rowlines = [row.strip() for row in fcsv]
 
     # Skip rows beginning with '#', and blank rows
@@ -41,7 +43,7 @@ def parse_csv(csvfilename):
 
 def parse_yaml(yamlfile):
     res = None
-    with open(locator_handle(yamlfile)) as yamlf:
+    with open(yamlfile, 'r') as yamlf:
         res = yaml.safe_load(yamlf)
     return res
 

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Union
+from dataclasses import fields, is_dataclass, replace
 
 
 class _PySymExpr:
@@ -96,8 +96,10 @@ class _PySymExpr:
                     if isinstance(child, _PySymExpr) and id(child) not in memo:
                         work.append((child, False))
             else:
-                left = memo[id(node.left)] if isinstance(node.left, _PySymExpr) else _subs_val(node.left, env)
-                right = memo[id(node.right)] if isinstance(node.right, _PySymExpr) else _subs_val(node.right, env)
+                #left = memo[id(node.left)] if isinstance(node.left, _PySymExpr) else _subs_val(node.left, env)
+                #right = memo[id(node.right)] if isinstance(node.right, _PySymExpr) else _subs_val(node.right, env)
+                left = memo[id(node.left)] if isinstance(node.left, _PySymExpr) else _subs_value(node.left, env)
+                right = memo[id(node.right)] if isinstance(node.right, _PySymExpr) else _subs_value(node.right, env)
                 if isinstance(left, int) and isinstance(right, int):
                     memo[id(node)] = _apply_op(node.op, left, right)
                 elif left is node.left and right is node.right:
@@ -154,7 +156,7 @@ class _PySymExpr:
         return self._hash
 
     def __repr__(self):
-        memo : dict[int, int] = {}
+        memo : dict[int, str] = {}
         work : list[tuple[_PySymExpr, bool]] = [(self, False)]
         while work:
             node, expanded = work.pop()
@@ -269,7 +271,7 @@ class SymDim:
         raise TypeError("Cannot evaluate truth value of a symbolic dimension")
 
 # Type Alias
-Dim = Union[int, SymDim]
+Dim = int | SymDim
 
 #Factory
 def sym(name: str) -> SymDim:
@@ -287,15 +289,6 @@ _OPS = {
 def _apply_op(op: str, left: int, right: int) -> int:
     return _OPS[op](left, right)
 
-def _subs_val(v, env: dict[str, int], cache: dict | None = None):
-    if isinstance(v, int):
-        return v
-    if isinstance(v, SymDim):
-        return v.subs(env)
-    if isinstance(v, SymExpr):
-        return v.subs(env, cache=cache)
-    return v #pragma: no cover
-
 def _hash_val(v):
     return hash(v)
 
@@ -307,8 +300,8 @@ def is_symbolic(v) -> bool:
 
 def is_divisible_by(expr, n: int) -> bool | None:
     if isinstance(n, bool) or not isinstance(n, int):
-        raise ValueError(f'is_divisible_by: n must be a positive int; got {type(n).__name__}={n!r}')
-    if n < 0:
+        raise TypeError(f'is_divisible_by: n must be a positive int; got {type(n).__name__}={n!r}')
+    if n <= 0:
         raise ValueError(f'is_divisible_by: n must be a positive int; got {n}')
     if isinstance(expr, int):
         return expr % n == 0
@@ -321,19 +314,18 @@ def is_divisible_by(expr, n: int) -> bool | None:
 
 
 ###########################################################
-#from dataclasses import fields, is_dataclass, replace
 
-#def _subs_value(v, env: Dict[str, int], cache=None):
-#    if isinstance(v, (SymDim, SymExpr)):
-#        return v.subs(env) if cache is None else v.subs(env, cache=cache)
-#    if isinstance(v, dict):
-#        return {k: _subs_value(val, env, cache) for k, val in v.items()}
-#    if isinstance(v, list):
-#        return [_subs_value(item, env, cache) for item in v]
-#    if is_dataclass(v) and not isinstance(v, type):
-#        updates =  {f.name: _subs_value(getattr(v, f.name), env, cache) for f in fields(v)}
-#        return replace(v, **updates)
-#    return v
+def _subs_value(v, env: dict[str, int], cache=None):
+    if isinstance(v, (SymDim, SymExpr)):
+        return v.subs(env) if cache is None else v.subs(env, cache=cache)
+    if isinstance(v, dict):
+        return {k: _subs_value(val, env, cache) for k, val in v.items()}
+    if isinstance(v, list):
+        return [_subs_value(item, env, cache) for item in v]
+    if is_dataclass(v) and not isinstance(v, type):
+        updates =  {f.name: _subs_value(getattr(v, f.name), env, cache) for f in fields(v)}
+        return replace(v, **updates)
+    return v
 
 def resolve_sym(data, env: dict[str, int], cache=None):
-    return _subs_val(data, env, cache)
+    return _subs_value(data, env, cache)
