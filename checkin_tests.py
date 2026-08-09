@@ -64,9 +64,7 @@ def main() -> int:
         enabled_tests = {x for x in test_handlers}
     else:
         enabled_tests = set(args.tests)
-        print(">>", enabled_tests)
         unsupported_tests = enabled_tests - set(test_handlers.keys())
-        print(">>", unsupported_tests)
         if unsupported_tests:
             print(f'error: tests {unsupported_tests} are not supported!!')
             sys.exit(1)
