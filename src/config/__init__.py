@@ -1,2 +1,2 @@
 
-from .workload import WLInfo
+from .workload import WLInfo as WLInfo

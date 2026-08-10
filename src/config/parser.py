@@ -1,14 +1,15 @@
 
 """Generic YAML config parser for hierarchical specs"""
 
-from src.utils.common import parse_yaml
+from typing import Any
 
-from typing import Any, Dict, Optional, Set, Tuple, List
 from loguru import logger
+
+from src.utils.common import parse_yaml
 
 INFO    = logger.info
 DEBUG   = logger.debug
-WARNING = logger.warnining
+WARNING = logger.warning
 ERROR   = logger.error
 
 
@@ -18,8 +19,8 @@ def is_external_ref(value: Any) -> bool:
     valid_suffixes = ['yaml', 'yml']
     return '@' in value and any(value.endswith(s) for s in valid_suffixes)
 
-def parse_external_ref(ref_str: Any) -> Tuple[str, str]:
-    if '@' noty in ref_str:
+def parse_external_ref(ref_str: Any) -> tuple[str, str]:
+    if '@' not in ref_str:
         raise ValueError(f'Invalid reference format: {ref_str}')
 
     parts = ref_str.split('@')
@@ -30,10 +31,10 @@ def parse_external_ref(ref_str: Any) -> Tuple[str, str]:
     return name, filepath
 
 def _resolve_refs_recursive(
-        config_dict: Dict[str, Any],
-        loaded_cache: Optional[Dict[str, Any]] = None,
-        visited_refs: Optional[Set[str]] = None,
-        ) -> Dict[str, Any]:
+        config_dict: dict[str, Any],
+        loaded_cache: dict[str, Any] | None = None,
+        visited_refs: set[str] | None = None,
+        ) -> dict[str, Any]:
 
     if loaded_cache is None:
         loaded_cache = {}
@@ -53,14 +54,14 @@ def _resolve_refs_recursive(
             if ref_path in visited_refs:
                 ERROR(f'Circular reference detected: {ref_path}')
                 raise ValueError(f'Circular reference: {ref_path}')
-    
+
             #Load the referenced YAML file (using cache)
             if ref_path not in loaded_cache:
                 DEBUG(f'Loading external ref {ref_path}')
                 loaded_cache[ref_path] = parse_yaml(ref_path)
-    
+
             referenced_content = loaded_cache[ref_path]
-    
+
             #Extract the specific named item from the referenced file
             if ref_name not in referenced_content:
                 ERROR(f'Reference {ref_name} not found in {ref_path}')
@@ -68,9 +69,9 @@ def _resolve_refs_recursive(
                         f'Reference {ref_name} not found in {ref_path}'
                         f'Available: {list(referenced_content.keys())}'
                         )
-    
+
             extracted_value = referenced_content[ref_name]
-    
+
             #Recursively resolve references in the extracted value
             visited_refs.add(ref_path)
             if isinstance(extracted_value, dict):
@@ -80,7 +81,7 @@ def _resolve_refs_recursive(
                         visited_refs=visited_refs.copy(),
                         )
             visited_refs.discard(ref_path)
-    
+
             resolved[key] = extracted_value
 
         elif isinstance(value, dict):
@@ -101,7 +102,7 @@ def _resolve_refs_recursive(
 
     return resolved
 
-def _is_numeric_leaf_map(d: Dict[str, Any]) -> bool:
+def _is_numeric_leaf_map(d: dict[str, Any]) -> bool:
     """
        A child dict is a <leaf param map> iff it is non-empty
        and every value is a primitive number (int, float) not bool.
@@ -128,10 +129,10 @@ def _is_numeric_leaf_map(d: Dict[str, Any]) -> bool:
     return True
 
 def _inject_names_recursive(
-        config_dict: Dict[str, Any],
-        parent_key: Optional[str] = None,
-        ignore_keys: Optional[List[str]] = None
-        ) -> Dict[str, Any]:
+        config_dict: dict[str, Any],
+        parent_key: str | None = None,
+        ignore_keys: list[str] | None = None
+        ) -> dict[str, Any]:
 
     """
        Recursively inject ``name: <child_key>`` into each nested dict
@@ -145,7 +146,7 @@ def _inject_names_recursive(
          - ``ignore_keys`` allows callers to opt specific parent keys out
            of injection (kept for backwards compatibility)
     """
-    result = Dict[str, Any] = {}
+    result : dict[str, Any] = {}
 
     #first process all children
     for key, value in config_dict.items():
@@ -167,8 +168,8 @@ def _inject_names_recursive(
         return result
     return {'name': parent_key, **result}
 
-def _inject_names(config_dict: Dict[str, Any], ignore_keys: Optional[List[str]] = None) -> Dict[str, Any]:
-    result: Dict[str, Any] = {}
+def _inject_names(config_dict: dict[str, Any], ignore_keys: list[str] | None = None) -> dict[str, Any]:
+    result: dict[str, Any] = {}
     for key, value in config_dict.items():
         if isinstance(value, dict):
             result[key] = _inject_names_recursive(value, parent_key=key, ignore_keys=ignore_keys)
@@ -176,7 +177,7 @@ def _inject_names(config_dict: Dict[str, Any], ignore_keys: Optional[List[str]] 
             result[key] = value
     return result
 
-def _get_nested_value(config_dict: Dict[str, Any], path: str) -> Any:
+def _get_nested_value(config_dict: dict[str, Any], path: str) -> Any:
     """
        Get a value from nested dict using dot separated path
     """
@@ -205,7 +206,7 @@ def _get_nested_value(config_dict: Dict[str, Any], path: str) -> Any:
 
     return current
 
-def _set_nested_value(config_dict: Dict[str, Any], path: str) -> Any:
+def _set_nested_value(config_dict: dict[str, Any], path: str, value: Any) -> Any:
     """
        Set a value from nested dict using dot separated path
     """
@@ -249,23 +250,22 @@ def _set_nested_value(config_dict: Dict[str, Any], path: str) -> Any:
                 f'Available: {list(current.keys())}'
                 )
 
-    DEBUG(f'Override: {path} = {value}')
+    DEBUG(f'Override: {final_key} = {value}')
     current[final_key] = value
     return
 
 
-def _apply_overrides(config_dict: Dict[str, Any], overrides: Dict[str, Any]) -> None:
+def _apply_overrides(config_dict: dict[str, Any], overrides: dict[str, Any]) -> None:
     for path, value in overrides.items():
         _set_nested_value(config_dict, path, value)
-    return
 
 
 def parse_config_with_refs(
         config_file: str,
         inject_names: bool = False,
-        ignore_keys: Optional[List[str]] = None,
-        overrides: Optional[Dict[str, Any]] = None,
-        ) -> Dict[str, Any]:
+        ignore_keys: list[str] | None = None,
+        overrides: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
 
     """
        Parse YAML config and resolve all external refs
