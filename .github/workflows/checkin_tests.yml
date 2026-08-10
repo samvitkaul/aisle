@@ -1,0 +1,49 @@
+name: Check-in tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+  merge_group:
+
+concurrency:
+  group: checkin-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checkin-tests:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up development environment
+        uses: ./.github/actions/setup_mamba
+        with:
+          environment-file: env_dev.yaml
+          environment-name: aisledev
+
+      - name: Run unit and coverage tests
+        uses: ./.github/actions/run-python-tests
+
+      - name: Run static analysis
+        uses: ./.github/actions/run-static-analysis
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkin-artifacts
+          if-no-files-found: ignore
+          path: |
+            .coverage
+            __ci/
+            __RUN_TESTS/
+            !__RUN_TESTS/**/*.onnx
