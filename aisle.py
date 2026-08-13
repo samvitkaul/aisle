@@ -14,12 +14,13 @@ WARNING = logger.warning
 ERROR   = logger.error
 
 
-def simulation(args: argparse.Namespace) -> tuple[int, int]:
+def runsim(args: argparse.Namespace) -> tuple[int, int]:
+    """main entry point """
     return 0,0
 
 def main(argv: list[str] | None = None) -> tuple[int, int]:
     args = setup_cmdline_args(argv)
-    return simulation(args)
+    return runsim(args)
 
 if __name__ == '__main__':
     start_time = time.perf_counter()
