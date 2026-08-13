@@ -1,11 +1,13 @@
 
-from ..utils.data_types import DataType, dt2np, promote_types
-from ..utils.common import prod_ints
-from ..utils.sym import is_symbolic
-from .tensor import Tensor, make_tensor
+from functools import reduce
 
 import numpy as np
-from functools import reduce
+
+from ..utils.common import prod_ints
+from ..utils.data_types import DataType, dt2np, promote_types
+from ..utils.sym import is_symbolic
+from .tensor import Tensor
+
 
 def fill_data(tensor: Tensor):
     if tensor.rank() == 0:
@@ -26,14 +28,7 @@ def clone_by_shape_n_fill(tensor, /, data_maybe_missing = True):
 
     if data_maybe_missing:
         if tensor.data is None:
-            clone = Tensor(**{
-                'name'   : tensor.name + '.clone',
-                'shape'  : tensor.shape,
-                'dtype'  : tensor.dtype.name,
-                'data'   : fill_data(tensor),
-                'op_in'  : tensor.op_in,
-                'op_out' : tensor.op_out
-                })
+            clone = Tensor(name=tensor.name + '.clone', shape=tensor.shape, dtype=tensor.dtype.name, data=fill_data(tensor), op_in=tensor.op_in, op_out=tensor.op_out)
         else:
             clone = tensor
     else:
@@ -48,7 +43,6 @@ def unary_fwd(iTList, oTList, op, **kwargs):
         raise ValueError(f"Input tensor shape not defined: {X}")
     Y.shape = X.shape
     Y.dtype = X.dtype
-    return
 
 def softmax_sinf(iTList, oTList, op, **kwargs):
     X, Y = iTList[0], oTList[0]
@@ -72,7 +66,6 @@ def softmax_sinf(iTList, oTList, op, **kwargs):
 
     Y.shape = X.shape
     Y.dtype = X.dtype
-    return
 
 def gelu_sinf(iTList, oTList, op, **kwargs):
     X, Y = iTList[0], oTList[0]
@@ -80,7 +73,7 @@ def gelu_sinf(iTList, oTList, op, **kwargs):
         raise ValueError(f"Input tensor shape not defined: {X}")
 
     approximate = op.attrs.get('approximate', 'none')
-    if not isinstance(axis, str):
+    if not isinstance(approximate, str):
         raise TypeError(f"Gelu attribute 'approximate' must be str; got {type(approximate).__name__}={approximate!r}")
 
     #persist the canonical value on the node so downstream passes can use it
@@ -88,7 +81,6 @@ def gelu_sinf(iTList, oTList, op, **kwargs):
 
     Y.shape = X.shape
     Y.dtype = X.dtype
-    return
 
 def bidirectional_broadcast_shape_inference(shape1, shape2):
     max_len = max(len(shape1), len(shape2))
@@ -115,7 +107,6 @@ def bidir_bcast(iTList, oTList, op, **kwargs):
     assert X1.check_shape(), f"Input tensor-1 shape not defined: {X1}"
     Y.shape = bidirectional_broadcast_shape_inference(X0.shape, X1.shape)
     Y.dtype = promote_types(X0.dtype, X1.dtype)
-    return
 
 def matmul_sinf(iTList, oTList, op, **kwargs):
     A, B = iTList[0], iTList[1]
@@ -160,7 +151,6 @@ def matmul_sinf(iTList, oTList, op, **kwargs):
 
     oTList[0].shape = CShape
     oTList[0].dtype = promote_types(A.dtype, B.dtype)
-    return
 
 def gather_sinf(iTList, oTList, op, **kwargs):
     axis = op.attrs.get('axis', 0)
@@ -177,7 +167,6 @@ def gather_sinf(iTList, oTList, op, **kwargs):
     assert axis >= 0 and axis < data_rank, f"Axis {axis} is out of bounds for dataT.shape {dataT.shape}"
     oTList[0].shape = data_shape[:axis] + indicesT.shape + data_shape[axis + 1:]
     oTList[0].dtype = dataT.dtype
-    return
 
 def scatternd_sinf(iTList, oTList, op, **kwargs):
     pass
@@ -194,9 +183,9 @@ def ln_sinf(iTList, oTList, op, **kwargs):
     XShape = X.shape
     XRank  = X.rank()
 
-    if axis < 0: axis += XRank
-    unsqueezed_rank = XRank - axis
-    reduction_shape = XShape[0:axis] + [1] * unsqueezed_rank
+    if _axis < 0: _axis += XRank
+    unsqueezed_rank = XRank - _axis
+    reduction_shape = XShape[0:_axis] + [1] * unsqueezed_rank
 
     oTList[0].shape = X.shape
     inputs_for_promo = [X.dtype, _scaleT.dtype]
@@ -213,7 +202,6 @@ def ln_sinf(iTList, oTList, op, **kwargs):
         oTList[2].shape = reduction_shape
         oTList[2].dtype = X.dtype
 
-    return
 
 def split_sinf(iTList, oTList, op, **kwargs):
     num_outputs = op.attrs.get('num_outputs', len(oTList))
@@ -224,7 +212,7 @@ def split_sinf(iTList, oTList, op, **kwargs):
     assert A.check_shape(), "Illegal shape!!"
 
     if axis < 0: axis = A.rank() + axis
-    assert axis in range(0, A.rank()), f"Split Shape Inference: axis={axis} should be in [0,{A.rank()})"
+    assert axis in range(A.rank()), f"Split Shape Inference: axis={axis} should be in [0,{A.rank()})"
 
 
     if splitT is None or splitT.data is None:
@@ -245,7 +233,6 @@ def split_sinf(iTList, oTList, op, **kwargs):
         tout.shape = tshape0
         tout.dtype = A.dtype
 
-    return
 
 def transpose_sinf(iTList, oTList, op, **kwargs):
     perms  = op.attrs['perm']
@@ -253,7 +240,6 @@ def transpose_sinf(iTList, oTList, op, **kwargs):
             f"perms({perms}) must be equal to input rank ({iTList[0].rank()})!!"
     oTList[0].shape = [iTList[0].shape[i] for i in perms]
     oTList[0].dtype = iTList[0].dtype
-    return
 
 def reshape_sinf(iTList, oTList, op, **kwargs):
     allowzero = op.attrs.get('allowzero', 0)
@@ -309,7 +295,6 @@ def reshape_sinf(iTList, oTList, op, **kwargs):
     oTList[0].shape = output_shape
     oTList[0].dtype = iTList[0].dtype
 
-    return
 
 def topk_sinf(iTList, oTList, op, **kwargs):
     pass
@@ -330,7 +315,6 @@ def argmax_sinf(iTList, oTList, op, **kwargs):
 
     oTList[0].shape = outShape
     oTList[0].dtype = DataType.INT64
-    return
 
 def reduce_sinf(iTList, oTList, op, **kwargs):
     keepdims = op.attrs.get('keepdims', 1)
@@ -364,14 +348,13 @@ def reduce_sinf(iTList, oTList, op, **kwargs):
     oTList[0].shape = outShape
     oTList[0].dtype = dataT.dtype
 
-    return
 
 def slice_sinf(iTList, oTList, op, **kwargs):
     pass
 
 def concat_sinf(iTList, oTList, op, **kwargs):
     axis = op.attrs['axis']
-    assert len(iTList) > 0, f"empty input list in Concat!!"
+    assert len(iTList) > 0, "empty input list in Concat!!"
     base_rank = iTList[0].rank()
     assert all(x.rank() == base_rank for x in iTList), "input tensors rank mismatch"
     if axis < 0: axis = base_rank + axis
@@ -391,7 +374,6 @@ def concat_sinf(iTList, oTList, op, **kwargs):
     outdtype = reduce(lambda acc, t: promote_types(acc, t.dtype), iTList[1:], iTList[0].dtype)
     oTList[0].dtype = outdtype
 
-    return
 
 def trilu_sinf(iTList, oTList, op, **kwargs):
     X, Y = iTList[0], oTList[0]
@@ -399,7 +381,6 @@ def trilu_sinf(iTList, oTList, op, **kwargs):
         raise ValueError(f"Input tensor shape not defined: {X}")
     Y.shape = X.shape
     Y.dtype = X.dtype
-    return
 
 def squeeze_sinf(iTList, oTList, op, **kwargs):
     assert iTList[0].check_shape(), f"Illegal Shape for {iTList[0]}"
@@ -420,7 +401,6 @@ def squeeze_sinf(iTList, oTList, op, **kwargs):
 
     oTList[0].shape = outshape
     oTList[0].dtype = dataT.dtype
-    return
 
 def unsqueeze_sinf(iTList, oTList, op, **kwargs):
     assert iTList[0].check_shape(), f"Illegal Shape for {iTList[0]}"
@@ -435,5 +415,4 @@ def unsqueeze_sinf(iTList, oTList, op, **kwargs):
 
     oTList[0].shape = list(newshape)
     oTList[0].dtype = iTList[0].dtype
-    return
 

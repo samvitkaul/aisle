@@ -1,23 +1,23 @@
-from ..utils.common import prod_ints
-from ..utils.data_types import DataType, str2dt, get_bpe
-from ..utils.sym import SymDim, SymExpr
+from typing import Any
 
-from typing import List, Optional, Any 
+from ..utils.common import prod_ints
+from ..utils.data_types import DataType, get_bpe, str2dt
+from ..utils.sym import SymDim, SymExpr
 
 
 class Tensor:
     __slots__ = (
-            'name',
-            'dtype',
-            'shape',
-            'op_in',
-            'op_out',
-            'is_param',
-            'is_const',
-            'is_view',
-            'data',
-            'location',
-            )
+        'data',
+        'dtype',
+        'is_const',
+        'is_param',
+        'is_view',
+        'location',
+        'name',
+        'op_in',
+        'op_out',
+        'shape',
+    )
     _KNOWN_KWARGS = frozenset({
             'dtype',
             'shape',
@@ -37,14 +37,14 @@ class Tensor:
 
         self.name      : str           = name
         self.dtype     : DataType      = str2dt(kwargs.get('dtype', 'undef'))
-        self.shape     : Optional[list]= kwargs.get('shape')
-        self.op_in     : List[str]     = kwargs.get('op_in', [])
-        self.op_out    : List[str]     = kwargs.get('op_out', [])
+        self.shape     : list | None= kwargs.get('shape')
+        self.op_in     : list[str]     = kwargs.get('op_in', [])
+        self.op_out    : list[str]     = kwargs.get('op_out', [])
         self.is_param  : bool          = kwargs.get('is_param', False)
         self.is_const  : bool          = kwargs.get('is_const', False)
         self.is_view   : bool          = kwargs.get('is_view',  False)
-        self.data      : Optional[Any] = kwargs.get('data',     None)
-        self.location  : Optional[Any] = kwargs.get('resolve',  None)
+        self.data      : Any | None = kwargs.get('data',     None)
+        self.location  : Any | None = kwargs.get('resolve',  None)
 
     def rank(self): return len(self.shape) #type: ignore[arg-type]
 
@@ -59,10 +59,10 @@ class Tensor:
         return res
 
     def nbytes(self):
-        if not self._is_concrete():
+        if not self.is_concrete():
             raise ValueError(
-                    f"Cannot compute nbytes() on tensor with symbolic shape."
-                    f"Use nbytes_assuming_concrete() instead for a best effort estimate"
+                    "Cannot compute nbytes() on tensor with symbolic shape."
+                    "Use nbytes_assuming_concrete() instead for a best effort estimate"
                     )
         return self.nelems() * get_bpe(self.dtype)
 
@@ -70,24 +70,28 @@ class Tensor:
         """ preserves symbolic exprs if they exist """
         return self.nelems() * get_bpe(self.dtype)
 
-    def check_shape(self) -> bool:
-        return self.rank() == 0 or (self.shape and all(isinstance(d, (int, SymDim, SymExpr)) for d in self.shape))
+    def check_shape(self):
+        return self.rank() == 0 or (
+                self.shape and all(
+                    isinstance(d, (int, SymDim, SymExpr)) for d in self.shape
+                    )
+                )
 
-    def _is_concrete(self) -> bool:
+    def is_concrete(self) -> bool:
         return self.rank() == 0 or (self.shape is not None and all(isinstance(d, int) for d in self.shape))
 
     def clone(self) -> 'Tensor':
         """ Fast shallow clone for per experiment isolation """
         new = object.__new__(Tensor)
-        new.name      = self.name      
-        new.dtype     = self.dtype     
-        new.shape     = self.shape     
-        new.op_in     = self.op_in     
-        new.op_out    = self.op_out    
-        new.is_param  = self.is_param  
-        new.is_const  = self.is_const  
-        new.data      = self.data      
-        new.location  = self.location  
+        new.name      = self.name
+        new.dtype     = self.dtype
+        new.shape     = self.shape
+        new.op_in     = self.op_in
+        new.op_out    = self.op_out
+        new.is_param  = self.is_param
+        new.is_const  = self.is_const
+        new.data      = self.data
+        new.location  = self.location
         return new
 
 

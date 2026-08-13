@@ -1,16 +1,17 @@
 from .registry import register_ops
 from .shape_inference import (
-        transpose_sinf,
-        gather_sinf,
-        scatternd_sinf,
-        reshape_sinf,
-        split_sinf,
-        slice_sinf,
-        trilu_sinf,
-        squeeze_sinf, 
-        unsqueeze_sinf,
-        concat_sinf,
-        )
+    concat_sinf,
+    gather_sinf,
+    reshape_sinf,
+    scatternd_sinf,
+    slice_sinf,
+    split_sinf,
+    squeeze_sinf,
+    transpose_sinf,
+    trilu_sinf,
+    unsqueeze_sinf,
+)
+
 
 def register_data_manip_ops():
     _optbl = [
@@ -28,4 +29,3 @@ def register_data_manip_ops():
 
             ]
     register_ops('data_manip', _optbl)
-    return

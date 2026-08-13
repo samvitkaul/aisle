@@ -1,7 +1,7 @@
 
-from dataclasses import dataclass, field
-from typing import Callable, Dict, FrozenSet, Iterable, Mapping, Optional
 import threading
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass, field
 
 _registry_lock = threading.Lock()
 
@@ -14,17 +14,16 @@ class OpRegistryEntry:
     min_output     : int
     max_output     : int
     shape_inf_func : Callable
-    attrs          : FrozenSet[str]    = field(default_factory=frozenset)
+    attrs          : frozenset[str]    = field(default_factory=frozenset)
     aliases        : Mapping[str, str] = field(default_factory=dict)
 
 _STANDARD_DOMAIN = ''
 
 class TensorOpRegistry:
     def __init__(self):
-        self._registry : Dict[str, OpRegistryEntry]= {}
+        self._registry : dict[str, OpRegistryEntry]= {}
         #group -> (domain string, opset version)
-        self._group_domains: Dict[str, tuple] = {}
-        return
+        self._group_domains: dict[str, tuple] = {}
 
     def register(self, entry: OpRegistryEntry) -> None:
         for alias_key, cannon_key in entry.aliases.items():
@@ -48,7 +47,6 @@ class TensorOpRegistry:
                     )
 
         self._registry[entry.opname] = entry
-        return
 
 
     def get_op(self, opname: str) -> OpRegistryEntry:
@@ -84,13 +82,13 @@ class TensorOpRegistry:
         dom = self._group_domains.get(rec.group)
         return dom[0] if dom is not None else _STANDARD_DOMAIN
 
-    def is_custom_op(self, opname: str) -> str:
+    def is_custom_op(self, opname: str) -> bool:
         return self.get_op_domain(opname) != _STANDARD_DOMAIN
 
-    def custom_domains_for(self, opnames: Iterable[str]) -> Dict[str, int]:
-        out: Dict[str, int] = {}
+    def custom_domains_for(self, opnames: Iterable[str]) -> dict[str, int]:
+        out: dict[str, int] = {}
         for n in opnames:
-            rec = self.registry.get(n)
+            rec = self._registry.get(n)
             if rec is None:
                 continue
             dom = self._group_domains.get(rec.group)
@@ -105,7 +103,7 @@ class TensorOpRegistry:
 
 
 # Global registry instance
-_global_registry: Optional[TensorOpRegistry] = None
+_global_registry: TensorOpRegistry | None = None
 
 def get_op_registry() -> TensorOpRegistry:
     global _global_registry
@@ -119,10 +117,10 @@ def register_ops(group, optbl):
     for rec in optbl:
         if len(rec) == 6:
             opname, max_i, min_i, max_o, min_o, sinf = rec
-            attrs_i, aliases_i = {}, {}
+            attrs_i, aliases_i = {}, {} #type: ignore
         elif len(rec) == 7:
             opname, max_i, min_i, max_o, min_o, sinf, attrs_i = rec
-            aliases_i = {}
+            aliases_i = {} #type: ignore
         elif len(rec) == 8:
             opname, max_i, min_i, max_o, min_o, sinf, attrs_i, aliases_i = rec
         else:
@@ -152,5 +150,5 @@ def get_op_domain(opname: str) -> str:
 def is_custom_op(opname: str) -> bool:
     return get_op_registry().is_custom_op(opname)
 
-def custom_domains_for(opnames: List[str]):
+def custom_domains_for(opnames: list[str]):
     return get_op_registry().custom_domains_for(opnames)

@@ -1,14 +1,13 @@
 
+from dataclasses import dataclass
+from enum import Enum, auto
+from itertools import count
+from typing import Any
+
 from .registry import get_op_registry
 
-
-from typing import Dict, List, Any, Optional, TYPE_CHECKING
-from itertools import count
-from dataclasses import dataclass, field
-from enum import Enum, auto
-
-if TYPE_CHECKING:
-    from src.back.kernel_desc import KernelDescriptor
+#if TYPE_CHECKING:
+#    from src.back.kernel_desc import KernelDescriptor
 
 class RemovalReason(Enum):
     NONE = auto()
@@ -33,31 +32,30 @@ class TensorOp:
         cls.op_counter = count(start=n + 1, step=1)
 
     def __init__(self, name: str, **kwargs):
-        self.name    : str        = name
-        self.optype  : str        = kwargs.get('optype')
-        self.attrs   : Dict[str, A]     = kwargs.get('attrs', {})
-        self.inList  : List[str]  = kwargs.get('inList', [])
-        self.outList : List[str]  = kwargs.get('outList', [])
-        self.id      : int        = next(self.op_counter)
+        self.name    : str            = name
+        self.optype  : str | None  = kwargs.get('optype')
+        self.attrs   : dict[str, Any] = kwargs.get('attrs', {})
+        self.inList  : list[str]      = kwargs.get('inList', [])
+        self.outList : list[str]      = kwargs.get('outList', [])
+        self.id      : int            = next(self.op_counter)
 
         #per-op filled by Device Compiler
-        self.kernel_desc: Optional['KernelDescriptor'] = None
+        #self.kernel_desc: Optional['KernelDescriptor'] = None
 
         #stats from execution on system/device
-        self.resource     : Optional[str] = None
+        self.resource     : str | None = None
         self.repeat_count : int           = 1
-        self.precision    : Optional[str] = None
+        self.precision    : str | None = None
 
         #graph optimization related
         self.removal_reason        : RemovalReason = RemovalReason.NONE
         self.fused_in_optimization : bool          = False
-        self.fused_with_op         : Optional[str] = None
+        self.fused_with_op         : str | None = None
 
         #system execution related
         self.exec_stats       : ExecStats = ExecStats()
         self.fused_exec_stats : ExecStats = ExecStats()
 
-        return
 
     @property
     def removed_in_optimization(self) -> bool:
@@ -95,7 +93,6 @@ class TensorOp:
         shape_inf_func = opinfo.shape_inf_func
         shape_inf_func(inT, outT, self, **kwargs)
 
-        return
 
     def fuse_op(self, fused_with_op):
         self.fused_in_optimization = True
@@ -103,15 +100,15 @@ class TensorOp:
 
     def clone(self) -> 'TensorOp':
         new = object.__new__(TensorOp)
-        new.name                  = self.name                  
-        new.optype                = self.optype                
-        new.attrs                 = self.attrs                 
-        new.inList                = self.inList                
-        new.outList               = self.outList               
-        new.id                    = self.id                    
-        new.kernel_desc           = None
-        new.resource              = self.resource              
-        new.repeat_count          = self.repeat_count          
+        new.name                  = self.name
+        new.optype                = self.optype
+        new.attrs                 = self.attrs
+        new.inList                = self.inList
+        new.outList               = self.outList
+        new.id                    = self.id
+        #new.kernel_desc           = None
+        new.resource              = self.resource
+        new.repeat_count          = self.repeat_count
         new.precision             = self.precision
         new.removal_reason        = RemovalReason.NONE
         new.fused_in_optimization = False

@@ -1,11 +1,10 @@
 
+import numpy as np
 import pytest
 
-from src.bten.tensor import make_tensor
 from src.bten.op import make_op
+from src.bten.tensor import make_tensor
 from src.utils.data_types import DataType, promote_types
-
-import numpy as np
 
 _POS_TESTCASES = [
         ("2D Matrix-Matrix",       [2, 3],            [3, 4]       ),

@@ -1,7 +1,8 @@
 
 from enum import Enum, auto
-import numpy as np
+
 import ml_dtypes as mlnp
+import numpy as np
 
 
 class DataType(Enum):
@@ -144,7 +145,7 @@ _UNSIGNED_TO_MIN_SIGNED = {
 
 def promote_types(a: DataType, b: DataType) -> DataType:
     if not isinstance(a, DataType) or not isinstance(b, DataType):
-        raise ValueError(
+        raise TypeError(
                 f"promote_types requires DataType inputs, got "
                 f"{type(a).__name__}, {type(b).__name__}"
                 )

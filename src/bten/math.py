@@ -1,13 +1,14 @@
 
 from .registry import register_ops
 from .shape_inference import (
-        unary_fwd,
-        bidir_bcast,
-        matmul_sinf,
-        softmax_sinf,
-        gelu_sinf,
-        topk_sinf,
-        )
+    bidir_bcast,
+    gelu_sinf,
+    matmul_sinf,
+    softmax_sinf,
+    topk_sinf,
+    unary_fwd,
+)
+
 
 def register_math_ops():
     _binary_optbl = [
@@ -32,4 +33,3 @@ def register_math_ops():
             ]
 
     register_ops('math', _binary_optbl + _unary_optbl + _x_optbl)
-    return

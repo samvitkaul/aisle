@@ -1,11 +1,12 @@
 
-from .math import register_math_ops
+import threading
+
 from .data_manip import register_data_manip_ops
+from .math import register_math_ops
+
 #from .ccl import register_ccl_ops
 from .nn import register_nn_ops
 from .reduction import register_reduction_ops
-
-import threading
 
 _init_lock = threading.Lock()
 _initialized = False

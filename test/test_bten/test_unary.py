@@ -1,10 +1,9 @@
 
+import numpy as np
 import pytest
 
-from src.bten.tensor import make_tensor
 from src.bten.op import make_op
-
-import numpy as np
+from src.bten.tensor import make_tensor
 
 
 @pytest.mark.unit

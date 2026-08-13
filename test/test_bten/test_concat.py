@@ -1,12 +1,12 @@
 
-import pytest
-
-from src.bten.tensor import make_tensor
-from src.bten.op import make_op
-from src.utils.data_types import DataType, promote_types
+from functools import reduce as _reduce
 
 import numpy as np
-from functools import reduce as _reduce
+import pytest
+
+from src.bten.op import make_op
+from src.bten.tensor import make_tensor
+from src.utils.data_types import DataType, promote_types
 
 _POS_TESTCASES = [
         ("2D tensors along axis 0",   [[2, 3], [4, 3]],             0, [6, 3]       ),
@@ -75,7 +75,7 @@ def test_concat(tname, ishapes, axis, expected):
     assert inf_shape == expected
 
     #ref impl
-    arrays = [np.random.randn(*shape) for shape in shapes]
+    arrays = [np.random.randn(*shape) for shape in ishapes]
     result = np.concatenate(arrays, axis=axis)
     ref_shape = list(result.shape)
     assert inf_shape == ref_shape

@@ -2,6 +2,7 @@
 from .registry import register_ops
 from .shape_inference import argmax_sinf, reduce_sinf
 
+
 def register_reduction_ops():
     _optbl = [
             ['ArgMax',          1, 1, 1, 1, argmax_sinf],
@@ -21,4 +22,3 @@ def register_reduction_ops():
 
 
     register_ops('reduction', _optbl)
-    return
