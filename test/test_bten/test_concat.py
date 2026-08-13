@@ -8,8 +8,6 @@ from src.utils.data_types import DataType, promote_types
 import numpy as np
 from functools import reduce as _reduce
 
-_OPTYPES = ['Add', 'Sub', 'Mul', 'Div', 'Pow', ]
-
 _POS_TESTCASES = [
         ("2D tensors along axis 0",   [[2, 3], [4, 3]],             0, [6, 3]       ),
         ("2D tensors along axia 1",   [[2, 3], [2, 4]],             1, [2, 7]       ),
@@ -40,10 +38,6 @@ _DTYPE_CASES = [
         ('poison_ud_bf16_fp32',      ['undef',    'bfloat16', 'float32'],              DataType.UNDEF),
         ]
 
-def ref_impl(shapes, axis):
-    arrays = [np.random.randn(*shape) for shape in shapes]
-    result = np.concatenate(arrays, axis=axis)
-    return list(result.shape)
 
 def prepare_op(_tname, _ishapes, _axis, _dtypes=None):
     if _dtypes is not None:
@@ -78,10 +72,13 @@ def test_concat(tname, ishapes, axis, expected):
 
     OP(IN, OUT)
     inf_shape = OUT[0].shape
-    ref_shape = ref_impl(ishapes, axis)
-
-    assert inf_shape == ref_shape
     assert inf_shape == expected
+
+    #ref impl
+    arrays = [np.random.randn(*shape) for shape in shapes]
+    result = np.concatenate(arrays, axis=axis)
+    ref_shape = list(result.shape)
+    assert inf_shape == ref_shape
 
 
 @pytest.mark.unit
