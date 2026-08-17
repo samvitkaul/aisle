@@ -2,12 +2,12 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from itertools import count
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .registry import get_op_registry
 
-#if TYPE_CHECKING:
-#    from src.back.kernel_desc import KernelDescriptor
+if TYPE_CHECKING:
+    from src.back.kernel_desc import KernelDescriptor
 
 class RemovalReason(Enum):
     NONE = auto()
@@ -40,7 +40,7 @@ class TensorOp:
         self.id      : int            = next(self.op_counter)
 
         #per-op filled by Device Compiler
-        #self.kernel_desc: Optional['KernelDescriptor'] = None
+        self.kernel_desc: KernelDescriptor | None = None
 
         #stats from execution on system/device
         self.resource     : str | None = None
@@ -98,7 +98,7 @@ class TensorOp:
         self.fused_in_optimization = True
         self.fused_with_op         = fused_with_op
 
-    def clone(self) -> 'TensorOp':
+    def clone_for_execute(self) -> 'TensorOp':
         new = object.__new__(TensorOp)
         new.name                  = self.name
         new.optype                = self.optype
@@ -106,7 +106,7 @@ class TensorOp:
         new.inList                = self.inList
         new.outList               = self.outList
         new.id                    = self.id
-        #new.kernel_desc           = None
+        new.kernel_desc           = None
         new.resource              = self.resource
         new.repeat_count          = self.repeat_count
         new.precision             = self.precision

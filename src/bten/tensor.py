@@ -80,7 +80,7 @@ class Tensor:
     def is_concrete(self) -> bool:
         return self.rank() == 0 or (self.shape is not None and all(isinstance(d, int) for d in self.shape))
 
-    def clone(self) -> 'Tensor':
+    def clone_for_execute(self) -> 'Tensor':
         """ Fast shallow clone for per experiment isolation """
         new = object.__new__(Tensor)
         new.name      = self.name

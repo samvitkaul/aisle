@@ -433,7 +433,6 @@ def reduce_sinf(iTList, oTList, op, **kwargs):
     oTList[0].shape = outShape
     oTList[0].dtype = dataT.dtype
 
-
 def slice_sinf(iTList, oTList, op, **kwargs):
     dataT   = iTList[0]
     startsT = clone_by_shape_n_fill(iTList[1], data_maybe_missing=False)
@@ -442,57 +441,79 @@ def slice_sinf(iTList, oTList, op, **kwargs):
     if len(iTList) >= 4:
         axesT = clone_by_shape_n_fill(iTList[3], data_maybe_missing=False)
     else:
-        #ONNX Slice: when `axes` is omitted, default to [0, 1, ..., len(starts)-1]
+        # ONNX Slice: when `axes` is omitted, default to [0, 1, ..., len(starts)-1]
         tdata0 = np.array([i for i in range(startsT.shape[0])], dtype=np.int64)
-        axesT  = make_tensor(
-                name=f'{op.name}__tmp_axesT__',
+        axesT = make_tensor(
+                name=f"{op.name}__tmp_axesT__",
                 data=tdata0,
                 shape=list(tdata0.shape),
-                dtype='int64',
+                dtype='int64'
                 )
 
     if len(iTList) == 5:
         stepsT = clone_by_shape_n_fill(iTList[4], data_maybe_missing=False)
     else:
         tdata1 = np.array([1 for _ in range(len(axesT.data))])
-        stepsT  = make_tensor(
-                name=f'{op.name}__tmp_stepsT__',
+        stepsT = make_tensor(
+                name=f"{op.name}__tmp_stepsT__",
                 data=tdata1,
                 shape=list(tdata1.shape),
-                dtype='int64',
+                dtype='int64'
                 )
 
-    assert startsT.rank() == 1, f"Slice Error 0, {startsT.shape}, rank != 1"
-    assert startsT.shape == endsT.shape, f"Slice Error 1, {startsT.shape} != {endsT.shape}"
-    assert startsT.shape == axesT.shape, f"Slice Error 2, {startsT.shape} != {axesT.shape}"
-    assert startsT.shape == stepsT.shape, f"Slice Error 3, {startsT.shape} != {stepsT.shape}"
+    if startsT.rank() != 1:
+        raise ValueError(f"Slice Error 0, {startsT.shape}, rank != 1")
+    if startsT.shape != endsT.shape:
+        raise ValueError(f"Slice Error 1, {startsT.shape} != {endsT.shape}")
+    if startsT.shape != axesT.shape:
+        raise ValueError(f"Slice Error 2, {startsT.shape} != {axesT.shape}")
+    if startsT.shape != stepsT.shape:
+        raise ValueError(f"Slice Error 3, {startsT.shape} != {stepsT.shape}")
 
     Y = oTList[0]
-    out_shape = list(dataT.shape)
-    rank = dataT.rank()
 
+    #if "out_shape" in op.attrs and op.attrs["out_shape"] is not None:
+    #    out_shape = [int(i) for i in op.attrs["out_shape"]]
+    #else:
+    #    out_shape = list(dataT.shape)
+    out_shape = list(dataT.shape)
+
+    rank = dataT.rank()
+    # NB: startsT/endsT/axesT/stepsT are 1-D tensors whose length equals the
+    # number of axes being sliced (one entry per axis). Earlier code looped
+    # `range(startsT.rank())`, which is always 1, so only the first axis was
+    # processed -- producing wrong output shapes for any multi-axis slice
+    # (e.g. x[:, i:j] on rank-2 tensors). Iterate the element count instead.
     n_axes = startsT.shape[0]
     for s in range(n_axes):
         axis = int(axesT.data[s])
         if axis < 0:
             axis += rank
-        assert 0 <= axis < rank, f"Slice axis {axis} out of bounds for rank {rank}"
+        if not (0 <= axis < rank):
+            raise ValueError(f"Slice axis {axis} out of bounds for rank {rank}")
 
-        dim = int(dataT.shape[axis])
+        dim = dataT.shape[axis]
         if is_symbolic(dim):
+            # Task 041: trailing-window slice (x[..., -W:]) on a symbolic axis.
+            # When the start is a literal negative magnitude and the end is the
+            # open-end sentinel (np.iinfo(int64).max), ONNX clamps the window to
+            # the last |start| positions. The output length is the concrete
+            # window magnitude W = min(W, dim), which is the concrete W whenever
+            # |start| is a concrete int (a shorter concrete axis is handled by
+            # the concrete path below). Anything else: keep the symbolic dim.
             start_v = int(startsT.data[s])
-            end_v   = int(endsT.data[s])
-            step_v  = int(stepsT.data[s])
+            end_v = int(endsT.data[s])
+            step_v = int(stepsT.data[s])
             if start_v < 0 and end_v >= int(np.iinfo(np.int64).max) and step_v == 1:
                 out_shape[axis] = -start_v
             continue
-        dim   = int(dim)
+        dim = int(dim)
         start = int(startsT.data[s])
-        end   = int(endsT.data[s])
-        step  = int(stepsT.data[s])
+        end = int(endsT.data[s])
+        step = int(stepsT.data[s])
 
-        if step == 0:
-            raise ValueError(f"Slice step == 0 not supported (got {step})")
+        if step <= 0:
+            raise ValueError(f"Slice step <= 0 not supported (got {step})")
 
         if start < 0:
             start += dim
@@ -500,7 +521,7 @@ def slice_sinf(iTList, oTList, op, **kwargs):
             end += dim
 
         start = max(0, min(dim, start))
-        end   = max(0, min(dim, end  ))
+        end = max(0, min(dim, end))
 
         if end <= start:
             length = 0
@@ -509,12 +530,10 @@ def slice_sinf(iTList, oTList, op, **kwargs):
 
         out_shape[axis] = length
 
-
     Y.shape = out_shape
     Y.dtype = dataT.dtype
-
     if not Y.check_shape():
-        raise ValueError("SLICE SHAPE INF ERROR!!")
+        raise ValueError("SHAPE INFERENCE ERROR!!")
 
 
 def concat_sinf(iTList, oTList, op, **kwargs):
