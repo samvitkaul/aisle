@@ -9,10 +9,14 @@ registry-time alias validation in `src/bten/registry.py::register_ops`.
   * register-time validation of bogus alias targets and collisions
 """
 import warnings
+
 import pytest
 
 from src.bten.registry import (
-    OpRegistryEntry, TensorOpRegistry, get_op_registry, register_ops,
+    OpRegistryEntry,
+    TensorOpRegistry,
+    get_op_registry,
+    register_ops,
 )
 from src.front.functional import get_op_attrs
 

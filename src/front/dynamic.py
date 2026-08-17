@@ -1,12 +1,15 @@
 
 
+from itertools import count
+
+import numpy as np
+
+import src.front.functional as F
+
 from ..bten.tensor import Tensor, make_tensor
 from ..utils.sym import is_symbolic
 from .module import get_active_module
-import src.front.functional as F
 
-from itertools import count
-import numpy as np
 
 class DynName:
     dynamic_op_counter = count(start=1, step=1)
@@ -184,7 +187,7 @@ def torch2onnx_slice_plan(input_shape, slice_spec):
             out_shape.extend(idx_shape)
             cur_axis += len(idx_shape)
         else:
-            raise AssertionError(f"Non-slice object found where slice expected {spec}")
+            raise TypeError(f"Non-slice object found where slice expected {spec}")
 
 
     squeeze_axes = list(range(len(gathers))) if gathers else None

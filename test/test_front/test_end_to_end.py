@@ -1,11 +1,12 @@
 """End-to-end front-end traces — composed nn.Module workloads."""
-import pytest
 import math
+from itertools import pairwise
 
-from src import make_tensor
+import pytest
+
 import src.front.functional as F
 import src.front.module as nn
-
+from src import make_tensor
 
 _counter = 0
 def uid(prefix="t"):
@@ -190,7 +191,8 @@ class TestEndToEnd:
         class StackedLinear(nn.Module):
             def __init__(self, name, dims):
                 super().__init__(name)
-                for i, (m, n) in enumerate(zip(dims[:-1], dims[1:])):
+                #for i, (m, n) in enumerate(zip(dims[:-1], dims[1:])):
+                for i, (m, n) in enumerate(pairwise(dims)):
                     setattr(self, f'fc{i}', nn.Linear(f'{name}.fc{i}', m, n))
                     setattr(self, f'act{i}', F.Gelu(f'{name}.gelu{i}'))
                 self.num_layers = len(dims) - 1

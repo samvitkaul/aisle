@@ -1,12 +1,11 @@
 
 import threading
+from collections.abc import Iterator
 
-from ..bten.tensor import Tensor
 from ..bten.op import TensorOp
+from ..bten.tensor import Tensor
 from ..graph import WorkloadGraph
-from .functional import TensorOpHandle, UniversalOperator, MatMul, Gather
-
-from typing import Iterator, Optional
+from .functional import Gather, MatMul, TensorOpHandle, UniversalOperator
 
 _trace_ctx = threading.local()
 
@@ -40,17 +39,17 @@ class Module:
         super().__setattr__(name, value)
 
     def get_tensors(self, tbl):
-        for k,v in self._tensors.items():
+        for v in self._tensors.values():
             tbl[v.name] = v
-        for k,v in self._submodules.items():
+        for v in self._submodules.values():
             v.get_tensors(tbl)
         return tbl
 
     def get_ops(self, tbl: dict):
-        for k,v in self._op_hndls.items():
+        for v in self._op_hndls.values():
             if v.op is not None:
                 tbl[v.op.name] = v.op
-        for k,v in self._submodules.items():
+        for v in self._submodules.values():
             v.get_ops(tbl)
         return tbl
 
@@ -85,11 +84,11 @@ class Module:
         gg = WorkloadGraph(self.name)
 
         #Add Tensors to Graph...
-        for _,tensor in ttbl.items():
+        for tensor in ttbl.values():
             gg.add_tensor(tensor)
 
         #Add Ops to Graph...
-        for _,op in otbl.items():
+        for op in otbl.values():
             gg.add_op(op)
 
         #Construct Graph
@@ -157,7 +156,7 @@ class ModuleList:
             self._modules_in_list[str(i)] = module
 
         #check all module names in the list are unique...
-        if len(self) != len(set(m.name for m in self._modules_in_list.values())):
+        if len(self) != len({m.name for m in self._modules_in_list.values()}):
             raise ValueError(f"Module Names in ModuleList are not unique : {[m.name for m in self._modules_in_list.values()]}!!")
 
     def __len__(self):
@@ -216,7 +215,7 @@ class Linear(Module):
         self.out_features: int = out_features
         self.matmul      : TensorOp = MatMul(name +'.matmul')
         self.param       : Tensor = Tensor(name + '.param', shape=[in_features, out_features], is_param=True, dtype=dtype)
-        self.bias        : Optional[Tensor] = Tensor(name + '.bias',  shape=[out_features], is_param=True, dtype=dtype) if bias else None
+        self.bias        : Tensor | None = Tensor(name + '.bias',  shape=[out_features], is_param=True, dtype=dtype) if bias else None
 
     def forward(self, x):
         Y = self.matmul(x, self.param)

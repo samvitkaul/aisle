@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from ..utils.data_types import DataType, dt2np
 from ..utils.sym import SymDim, SymExpr
@@ -23,18 +23,22 @@ def graph2onnx(G: WorkloadGraph,
                /,
                producer_name: str="",
                do_model_check: bool=True,
-               filter_op_attrs: Optional[Callable]=None):
+               filter_op_attrs: Callable | None=None):
 
+    import numpy as np
     import onnx
     from onnx import TensorProto
-    from onnx.helper import (
-        make_model, make_node, make_graph,
-        make_tensor_value_info, make_tensor, make_opsetid,
-    )
     from onnx.checker import check_model
-    import numpy as np
+    from onnx.helper import (
+        make_graph,
+        make_model,
+        make_node,
+        make_opsetid,
+        make_tensor,
+        make_tensor_value_info,
+    )
 
-    from ..bten.registry import get_op_registry, custom_domains_for
+    from ..bten.registry import custom_domains_for, get_op_registry
 
     _type_map = {
             DataType.FLOAT16 : TensorProto.FLOAT16,
@@ -142,4 +146,3 @@ def graph2onnx(G: WorkloadGraph,
     if do_model_check:
         check_model(model_def)
     onnx.save(model_def, onnx_filename)
-    return

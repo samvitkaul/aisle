@@ -1,10 +1,9 @@
 """FrontTensor subclass architecture — class identity, method presence."""
 import pytest
 
+import src.front.functional as F
 from src.bten.tensor import Tensor
 from src.front.tensor import FrontTensor, make_front_tensor
-import src.front.functional as F
-
 
 _counter = 0
 def uid(prefix="t"):

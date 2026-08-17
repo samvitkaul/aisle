@@ -1,10 +1,9 @@
 """Module layer — core Module / ModuleList semantics, __str__, and edge cases."""
 import pytest
 
-from src.bten.tensor import Tensor, make_tensor
 import src.front.functional as F
 import src.front.module as nn
-
+from src.bten.tensor import Tensor, make_tensor
 
 _counter = 0
 def uid(prefix="t"):

@@ -1,10 +1,11 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 from ..bten.tensor import Tensor, make_tensor
 from ..utils.sym import is_symbolic
 
-import numpy as np
 
 def _alloc_dyn_op(module_tensor, op_kind, op_factory,
                   const_inputs=(), extra_inputs=()):
@@ -30,8 +31,8 @@ def _alloc_dyn_op(module_tensor, op_kind, op_factory,
          or a tuple, depending on the op
     """
 
-    from .module import get_active_module
     from .dynamic import DynName
+    from .module import get_active_module
 
     module = get_active_module()
     if module is None:
@@ -77,8 +78,9 @@ class FrontTensor(Tensor):
     # --- View/Reshape ---
     def view(self, *shape):
         import src.front.functional as F
-        from .module import get_active_module
+
         from .dynamic import DynName
+        from .module import get_active_module
 
         dims: list = list(shape)
         orig_numel = self.nelems()
@@ -93,7 +95,7 @@ class FrontTensor(Tensor):
         for i, d in enumerate(dims):
             if d == -1:
                 if infer_idx is not None:
-                    raise ValueError(f"Only one dimension can be inferred (-1_")
+                    raise ValueError("Only one dimension can be inferred (-1_")
                 infer_idx = i
             else:
                 known *= d
@@ -104,18 +106,17 @@ class FrontTensor(Tensor):
                 dims[infer_idx] = orig_numel // known
             else:
                 if known == 0:
-                    raise ValueError(f"Known product of shape dims is zero")
+                    raise ValueError("Known product of shape dims is zero")
                 if orig_numel % known != 0:
-                    raise ValueError(f"Shape is not compatible for view (cannot infer dimension)")
+                    raise ValueError("Shape is not compatible for view (cannot infer dimension)")
                 dims[infer_idx] = orig_numel // known
 
         #Check total elems match (skip if symbolic)
         new_numel = 1
         for d in dims:
             new_numel *= d
-        if not is_symbolic(new_numel) and not is_symbolic(orig_numel):
-            if new_numel != orig_numel:
-                raise ValueError(f"Shape is not compatible for view (cannot infer dimension)")
+        if not is_symbolic(new_numel) and not is_symbolic(orig_numel) and new_numel != orig_numel:
+                raise ValueError("Shape is not compatible for view (cannot infer dimension)")
 
         module = get_active_module()
         if module is None:
@@ -155,7 +156,7 @@ class FrontTensor(Tensor):
                     f"Dimension out of range (expected to be in range of"
                     f" [{-nd}, {nd-1}], but got {dim}"
                     )
-        return shape[dim]
+        return shape[dim] #type: ignore[index]
 
     # --- TopK ---
     def topk(self, k, **kwargs):
@@ -183,9 +184,9 @@ class FrontTensor(Tensor):
     def unsqueeze(self, dim=None, axes=None, **kwargs):
         import src.front.functional as F
         if dim is not None and axes is not None:
-            raise ValueError(f"unsqueeze: pass exactly one of dim= or axes=, not both")
+            raise ValueError("unsqueeze: pass exactly one of dim= or axes=, not both")
         if dim is None and axes is None:
-            raise ValueError(f"unsqueeze: must specify dim= or axes=")
+            raise ValueError("unsqueeze: must specify dim= or axes=")
         if dim is not None:
             axes = [dim]
         axes_data = np.array(axes, dtype=np.int64)
@@ -199,9 +200,9 @@ class FrontTensor(Tensor):
     def squeeze(self, dim=None, axes=None, **kwargs):
         import src.front.functional as F
         if dim is not None and axes is not None:
-            raise ValueError(f"squeeze: pass exactly one of dim= or axes=, not both")
+            raise ValueError("squeeze: pass exactly one of dim= or axes=, not both")
         if dim is None and axes is None:
-            raise ValueError(f"squeeze: must specify dim= or axes=")
+            raise ValueError("squeeze: must specify dim= or axes=")
         if dim is not None:
             axes = [dim]
         axes_data = np.array(axes, dtype=np.int64)
@@ -216,7 +217,7 @@ class FrontTensor(Tensor):
         import src.front.functional as F
 
         if self.rank() < 1:
-            raise ValueError(f"Tensor rank must be at least 1")
+            raise ValueError("Tensor rank must be at least 1")
 
         #Handle neg indices
         if dim0 < 0: dim0 = self.rank() + dim0
@@ -243,57 +244,58 @@ class FrontTensor(Tensor):
     def __add__(self, other):
         import src.front.functional as F
         return self._dispatch_binary('Add', F.Add, other)
-    
+
     def __sub__(self, other):
         import src.front.functional as F
         return self._dispatch_binary('Sub', F.Sub, other)
-    
+
     def __mul__(self, other):
         import src.front.functional as F
         return self._dispatch_binary('Mul', F.Mul, other)
-    
+
     def __truediv__(self, other):
         import src.front.functional as F
         return self._dispatch_binary('Div', F.Div, other)
-    
+
     def __pow__(self, other):
         import src.front.functional as F
         return self._dispatch_binary('Pow', F.Pow, other)
-    
+
     def __matmul__(self, other):
         import src.front.functional as F
         return self._dispatch_binary('matmul', F.MatMul, other)
-    
+
     # --- Reflected Binary operator overloads ---
     def __radd__(self, other):
         import src.front.functional as F
         return self._dispatch_binary_r('Add', F.Add, other)
-    
+
     def __rsub__(self, other):
         import src.front.functional as F
         return self._dispatch_binary_r('Sub', F.Sub, other)
-    
+
     def __rmul__(self, other):
         import src.front.functional as F
         return self._dispatch_binary_r('Mul', F.Mul, other)
-    
+
     def __rtruediv__(self, other):
         import src.front.functional as F
         return self._dispatch_binary_r('Div', F.Div, other)
-    
+
     def __rpow__(self, other):
         import src.front.functional as F
         return self._dispatch_binary_r('Pow', F.Pow, other)
-    
+
     def __rmatmul__(self, other):
         import src.front.functional as F
         return self._dispatch_binary_r('matmul', F.MatMul, other)
-    
+
     # --- Indexing ---
     def __getitem__(self, idx):
         import src.front.functional as F
-        from .module import get_active_module
+
         from .dynamic import DynName, torch2onnx_slice_plan
+        from .module import get_active_module
 
         # Normalize scalar index to a tuple so torch2onnx_slice_plan can list() it
         if not isinstance(idx, tuple):
@@ -426,8 +428,8 @@ class FrontTensor(Tensor):
 
     def _dispatch_binary_r(self, optype, tensor_op_hndl, other):
         """Reflected binary op: other <op> self (other is LHS)"""
-        from .module import get_active_module
         from .dynamic import DynName
+        from .module import get_active_module
 
         if not isinstance(other, Tensor):
             raise TypeError(f"_binary_op {optype} arg= {other} not a Tensor!!")

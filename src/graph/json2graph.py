@@ -7,13 +7,12 @@ shape inference, ``__call__``, or ``onnx.shape_inference.infer_shapes``.
 """
 import base64
 import json
-from typing import Dict, List
 
 import numpy as np
 
 from ..bten.op import TensorOp
-from ..bten.tensor import Tensor
 from ..bten.registry import get_op_registry
+from ..bten.tensor import Tensor
 from ..utils.data_types import DataType, dt2np, str2dt
 from ..utils.sym import SymDim, SymExpr
 from .graph import WorkloadGraph
@@ -39,7 +38,7 @@ def _check_keys(obj: dict, allowed: set, path: str):
         raise _err(f"{path}: unknown fields {sorted(extras)!r}")
 
 
-def _parse_dim(rec, sym_cache: Dict[str, SymDim], path: str):
+def _parse_dim(rec, sym_cache: dict[str, SymDim], path: str):
     if not isinstance(rec, dict):
         raise _err(f"{path}: expected dim record (object), got {type(rec).__name__}")
     if "kind" not in rec:
@@ -76,7 +75,7 @@ def _parse_dim(rec, sym_cache: Dict[str, SymDim], path: str):
     raise _err(f"{path}.kind: {kind!r} not in {{'int','sym','expr'}}")
 
 
-def _parse_shape(shape, sym_cache: Dict[str, SymDim], path: str):
+def _parse_shape(shape, sym_cache: dict[str, SymDim], path: str):
     if shape is None:
         raise _err(
             f"{path}: shape is null — TENSOR-SHAPE-COMPLETE requires "
@@ -150,7 +149,7 @@ def json2graph(json_filename: str, /) -> WorkloadGraph:
     sym_names = payload["sym_dims"]
     if not isinstance(sym_names, list):
         raise _err("<root>.sym_dims: expected list")
-    sym_cache: Dict[str, SymDim] = {}
+    sym_cache: dict[str, SymDim] = {}
     for i, nm in enumerate(sym_names):
         if not isinstance(nm, str):
             raise _err(f"<root>.sym_dims[{i}]: expected str, got {type(nm).__name__}")
@@ -166,7 +165,7 @@ def json2graph(json_filename: str, /) -> WorkloadGraph:
     G = WorkloadGraph(payload["name"])
 
     # ---- tensors ---------------------------------------------------------
-    tensor_records: List[dict] = []
+    tensor_records: list[dict] = []
     for i, t_rec in enumerate(payload["tensors"]):
         path = f"tensors[{i}]"
         _check_keys(t_rec, _TENSOR_KEYS, path)
@@ -201,7 +200,7 @@ def json2graph(json_filename: str, /) -> WorkloadGraph:
     # ---- ops -------------------------------------------------------------
     registry = get_op_registry()
     max_id = 0
-    op_records: List[dict] = []
+    op_records: list[dict] = []
     for i, o_rec in enumerate(payload["ops"]):
         path = f"ops[{i}]"
         _check_keys(o_rec, _OP_KEYS, path)
@@ -241,8 +240,7 @@ def json2graph(json_filename: str, /) -> WorkloadGraph:
             if not isinstance(op_id, int) or isinstance(op_id, bool):
                 raise _err(f"{path}.id: expected int, got {type(op_id).__name__}")
             op.id = op_id
-            if op_id > max_id:
-                max_id = op_id
+            max_id = max(max_id, op_id)
         op.resource = o_rec.get("resource")
         rc = o_rec.get("repeat_count", 1)
         if not isinstance(rc, int) or isinstance(rc, bool):

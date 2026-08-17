@@ -1,11 +1,12 @@
 
-from ..bten.registry import get_op_registry
+import warnings
+from functools import partial
+
 from ..bten.op import TensorOp
+from ..bten.registry import get_op_registry
 from ..bten.tensor import Tensor
 from .tensor import FrontTensor
 
-from functools import partial
-import warnings
 
 def get_active_module():
     from .module import get_active_module as _gam

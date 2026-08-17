@@ -1,6 +1,6 @@
 
 import threading
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 
 _registry_lock = threading.Lock()
@@ -152,5 +152,5 @@ def get_op_domain(opname: str) -> str:
 def is_custom_op(opname: str) -> bool:
     return get_op_registry().is_custom_op(opname)
 
-def custom_domains_for(opnames: list[str]):
+def custom_domains_for(opnames: Iterator[str]):
     return get_op_registry().custom_domains_for(opnames)

@@ -4,12 +4,11 @@ Tests for TensorOpHandle one-shot invocation guard (NA-12).
 Verifies that TensorOpHandle raises RuntimeError on second invocation,
 preventing silent operation graph corruption.
 """
-import pytest
 import numpy as np
+import pytest
 
-from src import make_tensor
 import src.front.functional as F
-
+from src import make_tensor
 
 _counter = 0
 def uid(prefix="t"):
@@ -36,11 +35,11 @@ class TestTensorOpHandleOneShot:
         op = F.Softmax(uid("softmax"))
         x1 = make_tensor(name=uid("x1"), shape=[3, 5], dtype='float32')
         x2 = make_tensor(name=uid("x2"), shape=[3, 5], dtype='float32')
-        
+
         # First invocation succeeds
         y1 = op(x1)
         assert y1 is not None
-        
+
         # Second invocation raises RuntimeError
         with pytest.raises(RuntimeError, match="can only be invoked once"):
             op(x2)
@@ -51,11 +50,11 @@ class TestTensorOpHandleOneShot:
         op = F.Relu(uid("relu_op"))
         x1 = make_tensor(name=uid("x1"), shape=[2, 3], dtype='float32')
         y1 = op(x1)
-        
+
         x2 = make_tensor(name=uid("x2"), shape=[2, 3], dtype='float32')
         with pytest.raises(RuntimeError) as exc_info:
             op(x2)
-        
+
         error_msg = str(exc_info.value)
         assert "relu_op" in error_msg
         assert "Relu" in error_msg
@@ -79,11 +78,11 @@ class TestTensorOpHandleOneShot:
         y1 = make_tensor(name=uid("y1"), shape=[8, 3], dtype='float32')
         x2 = make_tensor(name=uid("x2"), shape=[4, 8], dtype='float32')
         y2 = make_tensor(name=uid("y2"), shape=[8, 3], dtype='float32')
-        
+
         # First invocation succeeds
         z1 = op(x1, y1)
         assert z1 is not None
-        
+
         # Second invocation raises RuntimeError
         with pytest.raises(RuntimeError, match="can only be invoked once"):
             op(x2, y2)
@@ -106,11 +105,11 @@ class TestTensorOpHandleOneShot:
         x1_2 = make_tensor(name=uid("x1_2"), shape=[4, 3], dtype='float32')
         x2_1 = make_tensor(name=uid("x2_1"), shape=[4, 2], dtype='float32')
         x2_2 = make_tensor(name=uid("x2_2"), shape=[4, 3], dtype='float32')
-        
+
         # First invocation succeeds
         y1 = op(x1_1, x1_2)
         assert y1 is not None
-        
+
         # Second invocation raises RuntimeError
         with pytest.raises(RuntimeError, match="can only be invoked once"):
             op(x2_1, x2_2)
@@ -151,12 +150,12 @@ class TestTensorOpHandleOneShot:
             dtype='int64',
             is_const=True,
         )
-        
+
         # First invocation succeeds
         v1, i1 = op(x1, k_tensor1)
         assert v1 is not None
         assert i1 is not None
-        
+
         # Second invocation raises RuntimeError
         with pytest.raises(RuntimeError, match="can only be invoked once"):
             op(x2, k_tensor2)
@@ -188,10 +187,10 @@ class TestTensorOpHandleOneShot:
         op = F.Transpose(uid("transpose"), perm=[1, 0])
         x1 = make_tensor(name=uid("x1"), shape=[3, 5], dtype='float32')
         x2 = make_tensor(name=uid("x2"), shape=[3, 5], dtype='float32')
-        
+
         y1 = op(x1)
         assert y1 is not None
-        
+
         with pytest.raises(RuntimeError, match="can only be invoked once"):
             op(x2)
 
@@ -201,13 +200,13 @@ class TestTensorOpHandleOneShot:
         op = F.Sigmoid(uid("sigmoid"))
         x1 = make_tensor(name=uid("x1"), shape=[2], dtype='float32')
         y1 = op(x1)
-        
+
         # Store original state
         original_in_list = op.op.inList.copy()
-        
+
         x2 = make_tensor(name=uid("x2"), shape=[2], dtype='float32')
         with pytest.raises(RuntimeError):
             op(x2)
-        
+
         # State should not have been modified by the failed second invocation
         assert op.op.inList == original_in_list

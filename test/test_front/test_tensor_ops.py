@@ -1,13 +1,13 @@
 """Dynamic layer — FrontTensor methods (view/reshape/transpose), operator
 overloads (+,-,*,/,**,@), reflected ops, __getitem__, and D.cat."""
-import pytest
 import math
 
+import pytest
+
+import src.front.dynamic as D
+import src.front.module as nn
 from src import make_tensor
 from src.front.tensor import make_front_tensor
-import src.front.module as nn
-import src.front.dynamic as D
-
 
 _counter = 0
 def uid(prefix="t"):

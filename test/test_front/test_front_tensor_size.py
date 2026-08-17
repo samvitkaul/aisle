@@ -8,7 +8,7 @@ distinct from `DTensor.size(mesh_dim=...)` device-mesh semantics.
 import pytest
 
 from src.front.tensor import FrontTensor
-from src.utils.sym import sym, is_symbolic, SymDim, SymExpr
+from src.utils.sym import SymDim, SymExpr, is_symbolic, sym
 
 
 class TestFrontTensorSize:

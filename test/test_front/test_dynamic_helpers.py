@@ -1,9 +1,8 @@
 """Dynamic-layer helpers — DynName uniqueness and torch2onnx_slice_plan."""
 import pytest
 
-import src.front.module as nn
 import src.front.dynamic as D
-
+import src.front.module as nn
 
 _counter = 0
 def uid(prefix="t"):

@@ -1,9 +1,8 @@
 """Module layer — neural layers (Linear, Embedding, LayerNorm)."""
 import pytest
 
-from src import make_tensor
 import src.front.module as nn
-
+from src import make_tensor
 
 _counter = 0
 def uid(prefix="t"):

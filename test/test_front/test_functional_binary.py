@@ -1,10 +1,9 @@
 """Functional layer — binary ops (Add/Sub/Mul/Div/Pow, MatMul, Gather, Reshape, Unsqueeze, Squeeze)."""
-import pytest
 import numpy as np
+import pytest
 
-from src import make_tensor
 import src.front.functional as F
-
+from src import make_tensor
 
 _counter = 0
 def uid(prefix="t"):

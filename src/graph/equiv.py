@@ -5,7 +5,6 @@ Two tolerance presets:
 * :data:`STRICT`     — every field must match (used by the JSON round-trip
   property test).
 * :data:`ONNX_LOSSY` — fields that ONNX cannot round-trip are skipped
-  (used by the ONNX round-trip property test in the follow-up PR).
 """
 from dataclasses import dataclass
 
@@ -82,12 +81,14 @@ def _data_equal(d1, d2) -> bool:
     try:
         a1 = np.asarray(d1)
         a2 = np.asarray(d2)
-    except Exception:
+    except Exception: #noqa: BLE001
         return d1 == d2
+
     if a1.shape != a2.shape:
         # Const data may have been flattened by the original writer; compare
         # flattened element-wise.
         return np.array_equal(a1.flatten(), a2.flatten())
+
     return np.array_equal(a1, a2)
 
 
@@ -137,8 +138,7 @@ def graph_equiv(g1: WorkloadGraph,
             return False
         if tolerance.check_location and t1.location != t2.location:
             return False
-        if tolerance.check_const_data and t1.is_const:
-            if not _data_equal(t1.data, t2.data):
+        if tolerance.check_const_data and t1.is_const and not _data_equal(t1.data, t2.data):
                 return False
         if sorted(t1.op_in) != sorted(t2.op_in):
             return False

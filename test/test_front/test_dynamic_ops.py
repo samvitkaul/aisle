@@ -7,14 +7,13 @@ These tests exercise ``src/front/dynamic.py`` through both:
      wrapper is exercised, which is the way user code actually drives these
      helpers (see ``workloads/BasicLLM.py``, ``workloads/BasicMoE.py``).
 """
+import numpy as np
 import pytest
 
-from src.utils.data_types import DataType
-from src.front.tensor import make_front_tensor
-import src.front.module as nn
 import src.front.dynamic as D
-import numpy as np
-
+import src.front.module as nn
+from src.front.tensor import make_front_tensor
+from src.utils.data_types import DataType
 
 _counter = 0
 def uid(prefix="t"):
@@ -331,7 +330,7 @@ class TestDynStack:
         assert int(axes_t.data[0]) == 0
 
         # axes_t must be consumed by all three Unsqueeze ops, no duplicates.
-        unsqueeze_ops = [n for n in m._op_hndls.keys() if 'unsqueeze_' in n]
+        unsqueeze_ops = [n for n in m._op_hndls if 'unsqueeze_' in n]
         assert len(unsqueeze_ops) == 3
         assert sorted(axes_t.op_in) == sorted(unsqueeze_ops)
         # Distinct entries — sanity check that we are not accidentally
@@ -385,7 +384,7 @@ class TestDynTopK:
         """k == axis-size is allowed."""
         m = _DynTestModule(uid("m_tk_ke"))
         x, _ = _make_linked_tensor([4, 8], module=m)
-        values, indices = D.topk(x, k=8)
+        values, _ = D.topk(x, k=8)
         assert values.shape == [4, 8]
 
     @pytest.mark.unit
@@ -532,7 +531,7 @@ class TestTensorTopK:
     def test_topk_k_equal_dim_size(self):
         m = _DynTestModule(uid("m_mtk_ke"))
         x, _ = _make_linked_tensor([4, 8], module=m)
-        values, indices = x.topk(k=8)
+        values, _ = x.topk(k=8)
         assert values.shape == [4, 8]
 
     @pytest.mark.unit
@@ -1231,7 +1230,7 @@ class TestTensorGetitemTensorIndex:
         legacy AssertionError fallback so future surprises surface loudly."""
         m = _DynTestModule(uid("m_tg8"))
         t, _ = _make_linked_tensor([4, 8], module=m)
-        with pytest.raises(AssertionError, match="Non-slice object found where slice expected"):
+        with pytest.raises(TypeError, match="Non-slice object found where slice expected"):
             _ = t[:, {'not': 'an index'}]
 
     @pytest.mark.unit
@@ -1339,7 +1338,7 @@ class TestSymbolicSlice:
         """`x[0:1, :]` where THE SLICED AXIS is concrete but the trailing
         axis is symbolic. Pre-fix the planner blew up while iterating the
         symbolic-axis slice (clip-against-dim)."""
-        from src.utils.sym import sym, is_symbolic
+        from src.utils.sym import is_symbolic, sym
         nE = sym("nE")
         plan = D.torch2onnx_slice_plan([4, nE], (slice(0, 1),))
         # Axis 0 is a concrete [0:1] slice -> length 1.
@@ -1355,7 +1354,7 @@ class TestSymbolicSlice:
         Trivial full-axis slices on symbolic dims are suppressed at plan
         time (their `ends` would be a SymExpr that can't lower to an
         ONNX int constant)."""
-        from src.utils.sym import sym, is_symbolic
+        from src.utils.sym import is_symbolic, sym
         nE = sym("nE")
         plan = D.torch2onnx_slice_plan([4, nE], (slice(None), slice(None)))
         # The symbolic axis (1) must not appear in the slice spec --

@@ -1,22 +1,22 @@
 
-from ..bten.tensor   import Tensor
-from ..bten.op       import TensorOp
-from ..utils.data_types import str2dt, get_bpe
 
 import networkx as nx
-from typing import Dict, List
+
+from ..bten.op import TensorOp
+from ..bten.tensor import Tensor
+from ..utils.data_types import get_bpe, str2dt
+
 
 class WorkloadGraph:
     def __init__(self, name):
         self._name     : str                 = name
         self._graph    : nx.MultiDiGraph     = nx.MultiDiGraph()
-        self._tensors  : Dict[str, Tensor]   = {}
-        self._ops      : Dict[str, TensorOp] = {}
-        self._inodes   : List[str]           = []
-        self._onodes   : List[str]           = []
-        self._itensors : List[str]           = []
-        self._otensors : List[str]           = []
-        return
+        self._tensors  : dict[str, Tensor]   = {}
+        self._ops      : dict[str, TensorOp] = {}
+        self._inodes   : list[str]           = []
+        self._onodes   : list[str]           = []
+        self._itensors : list[str]           = []
+        self._otensors : list[str]           = []
 
     def clone_for_execute(self) -> 'WorkloadGraph':
         """Fast structural clone for per-experiment isolation (Task 031).
@@ -71,7 +71,6 @@ class WorkloadGraph:
         if op.name in self._ops:
             raise ValueError(f"TensorOp({op.name}) is not unique!!!")
         self._ops[op.name] = op
-        return
 
     def construct_graph(self):
         for op_count, (op_name, op_info) in enumerate(self._ops.items()):
@@ -79,11 +78,10 @@ class WorkloadGraph:
             for o in op_info.outList:
                 for inode in self._tensors[o].op_in:
                     self._graph.add_edge(op_name, inode, name=o)
-        self._itensors = sorted(set([tname for tname,tval in self._tensors.items() if tval.op_out == []]))
-        self._otensors = sorted(set([tname for tname,tval in self._tensors.items() if tval.op_in == []]))
-        self._inodes   = sorted(set([o for t in self._itensors for o in self._tensors[t].op_in]))
-        self._onodes   = sorted(set([o for t in self._otensors for o in self._tensors[t].op_out]))
-        return
+        self._itensors = sorted({tname for tname,tval in self._tensors.items() if tval.op_out == []})
+        self._otensors = sorted({tname for tname,tval in self._tensors.items() if tval.op_in == []})
+        self._inodes   = sorted({o for t in self._itensors for o in self._tensors[t].op_in})
+        self._onodes   = sorted({o for t in self._otensors for o in self._tensors[t].op_out})
 
     def get_tensor(self, tname): return self._tensors[tname]
     def get_op(self, opname): return self._ops[opname]
@@ -92,8 +90,9 @@ class WorkloadGraph:
     def get_predecessors(self, opname): return list(self._graph.predecessors(opname))
 
     def fuse_nodes(self, fusion_spec):
-        from src.passes.op_fusion import find_fusion_candidates
-        return find_fusion_candidates(self, fusion_spec)
+        #from src.passes.op_fusion import find_fusion_candidates
+        #return find_fusion_candidates(self, fusion_spec)
+        return NotImplementedError
 
     def op_stat_iter(self, statname, /, repeat=False, use_precision=False):
         from dataclasses import fields as _dc_fields

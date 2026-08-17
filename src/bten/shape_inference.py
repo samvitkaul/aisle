@@ -535,7 +535,6 @@ def slice_sinf(iTList, oTList, op, **kwargs):
     if not Y.check_shape():
         raise ValueError("SHAPE INFERENCE ERROR!!")
 
-    return
 
 def concat_sinf(iTList, oTList, op, **kwargs):
     axis = op.attrs['axis']

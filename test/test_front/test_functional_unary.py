@@ -1,9 +1,8 @@
 """Functional layer — unary ops (Softmax, Gelu, Sigmoid, Transpose, Split)."""
 import pytest
 
-from src import make_tensor
 import src.front.functional as F
-
+from src import make_tensor
 
 _counter = 0
 def uid(prefix="t"):

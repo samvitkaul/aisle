@@ -8,7 +8,7 @@ Enforces TENSOR-SHAPE-COMPLETE. Does NOT invoke any op's
 ``__call__`` / shape-inference, does NOT call
 ``onnx.shape_inference.infer_shapes`` on the round-trip path.
 """
-from typing import Any, Dict, List
+from typing import Any
 
 from ..bten.op import TensorOp
 from ..bten.registry import get_op_registry
@@ -43,8 +43,8 @@ def _onnx_to_dtype(elem_type: int) -> DataType:
     return tbl[elem_type]
 
 
-def _parse_shape(type_proto, sym_cache: Dict[str, SymDim],
-                 tensor_name: str) -> List[Any]:
+def _parse_shape(type_proto, sym_cache: dict[str, SymDim],
+                 tensor_name: str) -> list[Any]:
     """Decode a TypeProto's tensor shape into Racksim axes.
 
     ``dim_value`` → ``int``; ``dim_param`` → ``SymDim`` (shared by name
@@ -52,7 +52,7 @@ def _parse_shape(type_proto, sym_cache: Dict[str, SymDim],
     §6 "SymDim identity"). An axis with neither field set violates
     TENSOR-SHAPE-COMPLETE and raises ``ValueError``.
     """
-    shape: List[Any] = []
+    shape: list[Any] = []
     for axis, dim in enumerate(type_proto.tensor_type.shape.dim):
         if dim.HasField("dim_param"):
             nm = dim.dim_param
@@ -135,7 +135,7 @@ def onnx2graph(onnx_filename: str,
 
     graph = modelpb.graph
     registry = get_op_registry()
-    sym_cache: Dict[str, SymDim] = {}
+    sym_cache: dict[str, SymDim] = {}
 
     G = WorkloadGraph(graph.name)
     seen: set = set()
@@ -185,8 +185,8 @@ def onnx2graph(onnx_filename: str,
 
     # 3) Nodes → TensorOps. Track loaded ops so we can advance the global
     #    op counter past the max issued id at the end.
-    load_warnings: List[str] = []
-    loaded_ops: List[TensorOp] = []
+    load_warnings: list[str] = []
+    loaded_ops: list[TensorOp] = []
 
     for node in graph.node:
         optype = node.op_type
@@ -221,7 +221,7 @@ def onnx2graph(onnx_filename: str,
                     f"(TENSOR-SHAPE-COMPLETE violation)"
                 )
 
-        attrs: Dict[str, Any] = {}
+        attrs: dict[str, Any] = {}
         for attr in node.attribute:
             attrs[attr.name] = _decode_attr(attr, node.name)
 

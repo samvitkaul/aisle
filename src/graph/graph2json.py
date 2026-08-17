@@ -3,7 +3,7 @@
 """
 import base64
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 
@@ -40,7 +40,7 @@ def _collect_sym_names_expr(expr: SymExpr, out: set):
 
 def _dim_to_json(d, tensor_name: str, axis_idx: int):
     if isinstance(d, bool):
-        raise ValueError(
+        raise TypeError(
             f"tensors[{tensor_name!r}].shape[{axis_idx}]: bool is not a valid axis"
         )
     if isinstance(d, int):
@@ -55,7 +55,7 @@ def _dim_to_json(d, tensor_name: str, axis_idx: int):
     )
 
 
-def _expr_to_json(e: SymExpr) -> Dict[str, Any]:
+def _expr_to_json(e: SymExpr) -> dict[str, Any]:
     return {
         "kind": "expr",
         "op": e.op,
@@ -66,7 +66,7 @@ def _expr_to_json(e: SymExpr) -> Dict[str, Any]:
 
 def _operand_to_json(v):
     if isinstance(v, bool):
-        raise ValueError(f"SymExpr operand: bool not supported, got {v!r}")
+        raise TypeError(f"SymExpr operand: bool not supported, got {v!r}")
     if isinstance(v, int):
         return {"kind": "int", "value": v}
     if isinstance(v, SymDim):
@@ -112,8 +112,8 @@ def _encode_location(loc, tname: str):
     return loc
 
 
-def _encode_attrs(attrs: Dict[str, Any], op_name: str):
-    out: Dict[str, Any] = {}
+def _encode_attrs(attrs: dict[str, Any], op_name: str):
+    out: dict[str, Any] = {}
     for k, v in attrs.items():
         try:
             json.dumps(v)
@@ -130,7 +130,7 @@ def graph2json(G: WorkloadGraph,
                /,
                *,
                include_const_data: bool = True,
-               indent: Optional[int] = 2) -> None:
+               indent: int | None = 2) -> None:
     """Serialise ``G`` to JSON at ``json_filename`` per the v1 schema (§5).
 
     See ``docs/tasks/035_graph_roundtrip_deserialization.md`` for the
@@ -142,7 +142,7 @@ def graph2json(G: WorkloadGraph,
     for tval in G._tensors.values():
         _collect_sym_names(tval.shape, sym_names)
 
-    tensors_json: List[Dict[str, Any]] = []
+    tensors_json: list[dict[str, Any]] = []
     for tname, tval in G._tensors.items():
         if tval.shape is None:
             raise ValueError(
@@ -169,7 +169,7 @@ def graph2json(G: WorkloadGraph,
         })
 
     registry = get_op_registry()
-    ops_json: List[Dict[str, Any]] = []
+    ops_json: list[dict[str, Any]] = []
     for oname in G.get_ordered_nodes():
         op = G.get_op(oname)
         optype = op.optype or ''

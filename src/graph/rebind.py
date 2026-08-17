@@ -4,13 +4,12 @@ A single-pass tensor walk that substitutes ``env`` into every shape
 axis of every tensor. Returns a fresh graph via ``clone_for_execute``
 Does NOT call any op's ``forward()`` or shape inference.
 """
-from typing import Dict
 
 from ..utils.sym import SymDim, SymExpr
 from .graph import WorkloadGraph
 
 
-def _subs_axis(axis, env: Dict[str, int]):
+def _subs_axis(axis, env: dict[str, int]):
     if isinstance(axis, int):
         return axis
     if isinstance(axis, (SymDim, SymExpr)):
@@ -19,7 +18,7 @@ def _subs_axis(axis, env: Dict[str, int]):
 
 
 def rebind_symbolic_dims(G: WorkloadGraph,
-                         env: Dict[str, int],
+                         env: dict[str, int],
                          /) -> WorkloadGraph:
     """Return a fresh ``WorkloadGraph`` with each SymDim/SymExpr axis
     bound per ``env``. Partial binds are supported (unknown SymDim
@@ -30,7 +29,7 @@ def rebind_symbolic_dims(G: WorkloadGraph,
     """
     for k, v in env.items():
         if isinstance(v, bool) or not isinstance(v, int):
-            raise ValueError(
+            raise TypeError(
                 f"rebind_symbolic_dims: env[{k!r}] must be int, got "
                 f"{type(v).__name__}={v!r}"
             )
