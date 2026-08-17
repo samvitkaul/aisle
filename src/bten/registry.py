@@ -124,7 +124,9 @@ def register_ops(group, optbl):
         elif len(rec) == 8:
             opname, max_i, min_i, max_o, min_o, sinf, attrs_i, aliases_i = rec
         else:
-            raise ValueError("X")
+            raise ValueError(
+                    f"register_ops: unsupported row arity {len(rec)} for {rec[0]!r}"
+                    )
         entry = OpRegistryEntry(
                 opname = opname,
                 group = group,
