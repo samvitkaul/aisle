@@ -91,6 +91,32 @@ def str2dt(dtype: str) -> DataType:
         dt = DataType.UNDEF
     return dt
 
+# ----- dt fallbacks -----------------
+def dt_fallbacks(dtype: DataType) -> List[DataType]:
+    _tbl = {
+            DataType.INT2          : ['INT4', 'INT8', 'INT16', 'INT32', 'INT64'],
+            DataType.INT4          : ['INT8', 'INT16', 'INT32', 'INT64'],
+            DataType.INT8          : ['INT16', 'INT32', 'INT64'],
+            DataType.INT16         : ['INT32', 'INT64'],
+            DataType.INT32         : ['INT64'],
+            DataType.UINT2         : ['UINT4', 'UINT8', 'UINT16', 'UINT32', 'UINT64'],
+            DataType.UINT4         : ['UINT8', 'UINT16', 'UINT32', 'UINT64'],
+            DataType.UINT8         : ['UINT16', 'UINT32', 'UINT64'],
+            DataType.UINT16        : ['UINT32', 'UINT64'],
+            DataType.UINT32        : ['UINT64'],
+            DataType.FLOAT8        : ['FLOAT16', 'FLOAT32', 'FLOAT64'],
+            DataType.BFLOAT16      : ['FLOAT32', 'FLOAT64'],
+            DataType.TENSOR_FLOAT32: ['FLOAT32', 'FLOAT64'],
+            DataType.FLOAT16       : ['FLOAT32', 'FLOAT64'],
+            DataType.FLOAT32       : ['FLOAT64'],
+            DataType.FLOAT4_e2m1fn : ['FLOAT8', 'FLOAT16', 'FLOAT32', 'FLOAT64'],
+            }
+    try:
+        fallback_types = _tbl[dtype]
+    except KeyError:
+        fallback_types = []
+    return [str2dt(x) for x in fallback_types]
+
 
 # ----- promote types -----------------
 _SIGNED_INT_RANK = {
