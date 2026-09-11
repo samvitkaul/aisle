@@ -1,0 +1,13 @@
+clos_fabric:
+  fabric_kind: clos
+  uplink_bandwidth: 400Gbps
+  inter_rack_latency: 500ns
+  link_redundancy: 2
+  switch_model: Nvidia Quantum2
+
+spine_leaf_fabric:
+  fabric_kind: spine_leaf
+  uplink_bandwidth: 400Gbps
+  inter_rack_latency: 1000ns
+  link_redundancy: 4
+  switch_model: Nvidia Quantum2

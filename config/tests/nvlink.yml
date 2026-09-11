@@ -1,0 +1,4 @@
+blackwell_nvlink:
+  gen       : gen5
+  link_bw   : '100 GB/s'
+  num_links : 18

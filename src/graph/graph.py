@@ -90,9 +90,8 @@ class WorkloadGraph:
     def get_predecessors(self, opname): return list(self._graph.predecessors(opname))
 
     def fuse_nodes(self, fusion_spec):
-        #from src.passes.op_fusion import find_fusion_candidates
-        #return find_fusion_candidates(self, fusion_spec)
-        return NotImplementedError
+        from src.passes.op_fusion import find_fusion_candidates
+        return find_fusion_candidates(self, fusion_spec)
 
     def op_stat_iter(self, statname, /, repeat=False, use_precision=False):
         from dataclasses import fields as _dc_fields

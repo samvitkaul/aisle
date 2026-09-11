@@ -1,0 +1,24 @@
+matrix_isa:
+  mac: {opc: {int8: 2048, bf16: 2048, fp16: 2048, fp8: 2048}}
+  mma: {opc: {int8: 2048, bf16: 2048, fp16: 2048, fp8: 2048, fp32: 128}}
+
+vector_isa:
+  # Arithmetic instructions
+  add: {opc: {int32: 32, fp64: 16, fp32: 32}}
+  sub: {opc: {int32: 32, fp64: 16, fp32: 32}}
+  mul: {opc: {int32: 32, fp64: 16, fp32: 32}}
+  div: {opc: {int32: 32, fp64: 16, fp32: 32}}
+  opmul: {opc: {int32: 32, fp64: 16, fp32: 32}}
+  cmp: {opc: {int32: 32, fp64: 16, fp32: 32}}
+
+  # Data movement
+  mov: {opc: {int32: 32, fp64: 16, fp32: 32}}
+
+  # Special Function Unit (SFU) instructions
+  tanh:  {opc: {int32: 32, fp64: 16, fp32: 32}}
+  log:   {opc: {int32: 32, fp64: 16, fp32: 32}}
+  exp:   {opc: {int32: 32, fp64: 16, fp32: 32}}
+  pow:   {opc: {int32: 32, fp64: 16, fp32: 32}}
+  erf:   {opc: {int32: 32, fp64: 16, fp32: 32}}
+  sqrt:  {opc: {int32: 32, fp64: 16, fp32: 32}}
+  rsqrt: {opc: {int32: 32, fp64: 16, fp32: 32}}

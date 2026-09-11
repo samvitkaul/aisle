@@ -1,0 +1,16 @@
+
+l0:
+  num_banks: 32
+  bpc: 128
+  size_per_bank: '4 KB'
+l1:
+  num_banks: 64
+  bytes_per_clk_per_bank: 64
+  size_per_bank: '64 KB'
+l2:
+  num_banks: 128
+  bpc: 16
+  sz: '0.5 MB'
+r0:
+  bpc: 512
+  size: '1 KB'

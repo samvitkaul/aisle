@@ -1,0 +1,3 @@
+self_ref:
+  key0: 'self_ref@config/tests/self_ref.yml'
+  key1: 123

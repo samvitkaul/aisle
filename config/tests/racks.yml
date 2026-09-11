@@ -1,0 +1,6 @@
+standard_rack:
+  blade: NVL72@config/tests/blades.yml
+  num_blades: 8
+  blade_interconnect: nvlink_rackswitch@config/tests/rack_fabrics.yml
+  cooling_capacity_kW: 500.0
+  power_capacity_kW: 150.0

@@ -1,0 +1,3 @@
+dummy_host: {name: dummy_host}
+dummy_nvme: {size: 3.2 GB, pcie: {gen: gen4, link_bw: 2 GB/s, num_links: 4}}
+dummy_nic : {bandwidth: 200 Gb/s, pcie: {gen: gen4, link_bw: 2 GB/s, num_links: 16}}

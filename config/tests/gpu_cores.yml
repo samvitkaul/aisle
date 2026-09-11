@@ -1,0 +1,8 @@
+tensor_core:
+  frequency    : '1333 MHz'
+  instructions : matrix_isa@config/tests/instructions.yml
+
+cuda_core:
+  frequency    : '1.6 GHz'
+  instructions : vector_isa@config/tests/instructions.yml
+

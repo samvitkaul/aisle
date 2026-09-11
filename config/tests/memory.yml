@@ -1,0 +1,63 @@
+lpddr5x:
+  technology         : LPDDR
+  data_bits          : 16
+  data_rate          : 4
+  frequency          : '1.2 GHz'
+  size               : '4 GB'
+  transfer_rate_GTps : 9.6
+gddr6:
+  technology         : GDDR
+  data_bits          : 32
+  data_rate          : 8
+  frequency          : '1.25 GHz'
+  size               : '4 GB'
+  transfer_rate_GTps : 20.0
+gddr7:
+  technology         : GDDR
+  data_bits          : 32
+  data_rate          : 16
+  frequency          : '1.25 GHz'
+  size               : '2 GB'
+  transfer_rate_GTps : 40.0
+hbm1:
+  technology         : HBM
+  frequency          : '500 MHz'
+  stacks             : 8
+  data_bits          : 128
+  size               : '4 GB'
+  transfer_rate_GTps : 8.0
+hbm2:
+  technology         : HBM
+  frequency          : '1.2 GHz'
+  stacks             : 8
+  data_bits          : 128
+  size               : '8 GB'
+  transfer_rate_GTps : 19.2
+hbm2e:
+  technology         : HBM
+  frequency          : '1.8 GHz'
+  stacks             : 8
+  data_bits          : 128
+  size               : '16 GB'
+  transfer_rate_GTps : 28.8
+hbm3:
+  technology         : HBM
+  frequency          : '3.2 GHz'
+  stacks             : 16
+  data_bits          : 64
+  size               : '16 GB'
+  transfer_rate_GTps : 102.4
+hbm3e:
+  technology         : HBM
+  frequency          : '4.9 GHz'
+  stacks             : 16
+  data_bits          : 64
+  size               : '48 GB'
+  transfer_rate_GTps : 156.8
+hbm4:
+  technology         : HBM
+  frequency          : '3.2 GHz'
+  stacks             : 32
+  data_bits          : 64
+  size               : '64 GB'
+  transfer_rate_GTps : 204.8

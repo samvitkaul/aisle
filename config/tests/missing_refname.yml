@@ -1,0 +1,4 @@
+tensor_core:
+  frequency    : '1333 MHz'
+  instructions : bad_isa@config/tests/instructions.yml
+

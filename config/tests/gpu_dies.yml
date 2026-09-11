@@ -1,0 +1,14 @@
+GB102:
+  process              : '4NP TSMC'
+  die_size_sq_mm       : 890.3
+  transistors_B        : 208.1
+  gpc_per_die          : 8
+  tpc_per_gpc          : 9
+  sm_per_tpc           : 2
+  cuda_cores_per_sm    : 64
+  tensor_cores_per_sm  : 4
+  tensor_core          : tensor_core@config/tests/gpu_cores.yml
+  cuda_core            : cuda_core@config/tests/gpu_cores.yml
+  regfile              : {name: 'RegF', bpc: 256, size: '128 KB'}
+  l1_cache             : {name: 'L1$', num_banks:  64, bpc: 64, sz: '64 KB'}
+  l2_cache             : {name: 'L2$', num_banks: 128, bpc: 32, sz: ' 4 MB'}

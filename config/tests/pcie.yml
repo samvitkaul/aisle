@@ -1,0 +1,4 @@
+blackwell_pcie:
+  gen       : gen6
+  link_bw   : '16 GB/s'
+  num_links : 16
