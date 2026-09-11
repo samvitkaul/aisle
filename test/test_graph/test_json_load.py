@@ -5,7 +5,6 @@ import pytest
 
 from src.bten.op import TensorOp, make_op
 from src.bten.tensor import make_tensor
-from src.utils.sym import SymDim
 from src.graph import (
     STRICT,
     WorkloadGraph,
@@ -13,6 +12,7 @@ from src.graph import (
     graph_equiv,
     json2graph,
 )
+from src.utils.sym import SymDim
 
 from ._fixtures import (
     ALL_GRAPH_FIXTURES,

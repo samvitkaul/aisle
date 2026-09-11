@@ -1,4 +1,4 @@
-"""Composite system mixin shared by Nvidia (and future Qualcomm) composites.
+"""Composite system mixin shared by Nvidia composites.
 
 `Blade`, `Rack`, and `Cluster` (and the in-flight Qualcomm composites) all
 implement the same six ExecSystem-contract methods on top of a single child
@@ -32,15 +32,15 @@ class CompositeSystemMixin:
         return getattr(self, self._count_attr)
 
     # -- ExecSystem contract --------------------------------------------
-    def default_compiler(self):
-        leaf = self._child.default_compiler()
-        # Wrap exactly once, at the lowest composite layer above a leaf
-        # device (the leaf's `default_compiler()` returns a per-device
-        # `DeviceCompiler`, not a `CompositeDeviceCompiler`).
-        if isinstance(self._child, CompositeSystemMixin):
-            return leaf
-        from src.back.device_compiler import CompositeDeviceCompiler
-        return CompositeDeviceCompiler(leaf)
+#    def default_compiler(self):
+#        leaf = self._child.default_compiler()
+#        # Wrap exactly once, at the lowest composite layer above a leaf
+#        # device (the leaf's `default_compiler()` returns a per-device
+#        # `DeviceCompiler`, not a `CompositeDeviceCompiler`).
+#        if isinstance(self._child, CompositeSystemMixin):
+#            return leaf
+#        from src.back.device_compiler import CompositeDeviceCompiler
+#        return CompositeDeviceCompiler(leaf)
 
     def peak_ops_per_cycle(self, instr: str, prec: str) -> tuple[str, float]:
         from src.config import reroot_clock

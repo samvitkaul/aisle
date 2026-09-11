@@ -1,7 +1,9 @@
-from ...utils.data_types import DataType, str2dt
+from collections.abc import Mapping
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Mapping
+
+from ...utils.data_types import DataType, str2dt
+
 
 class Instruction(BaseModel):
     model_config = ConfigDict(extra='forbid', populate_by_name=True, frozen=True)
@@ -36,7 +38,7 @@ class Instruction(BaseModel):
     def get_throughput(self, prec: str) -> float:
         dt = str2dt(prec)
         if dt not in self.throughput:
-            available = [str(dt) for dt in self.throughput.keys()]
+            available = [str(dt) for dt in self.throughput]
             raise KeyError(
                 f"Instruction '{self.name}' does not support precision '{prec}'. "
                 f"Available: {available}"

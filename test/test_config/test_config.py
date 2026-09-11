@@ -1,18 +1,16 @@
 import pytest
+from loguru import logger
+from pydantic import ValidationError
 
-from src.config.device import Instruction, ComputeCore, Cache, Memory, GPUDie, GPU
-from src.config.system.blade import Blade
-from src.config.system.rack import Rack
-from src.config.system.cluster import Cluster
-
+from src.config.device import GPU, Cache, ComputeCore, GPUDie, Instruction, Memory
 from src.config.parser import parse_config_with_refs
-from src.config.workload import WLInfo
-#from src.front import AxisSpec, ParallelScheme, SymbolicParallelSpec
-
+from src.config.system.blade import Blade
+from src.config.system.cluster import Cluster
+from src.config.system.rack import Rack
 from src.utils.data_types import DataType
 
-from pydantic import ValidationError
-from loguru import logger
+#from src.config.workload import WLInfo
+#from src.front import AxisSpec, ParallelScheme, SymbolicParallelSpec
 
 INFO = logger.info
 
@@ -91,13 +89,12 @@ def test_gpu_cores(idx, cfg_yaml_file):
 def test_caches(idx, cfg_yaml_file):
     caches = parse_config_with_refs(cfg_yaml_file, inject_names=True, ignore_keys=['opc'])
     try:
-        for cname, cinfo in caches.items():
+        for cinfo in caches.values():
             cspec = Cache.model_validate(cinfo)
             INFO('CACHE', cspec)
     except ValidationError as e:
         print(e)
         raise
-    return
 
 
 @pytest.mark.unit
@@ -105,7 +102,7 @@ def test_caches(idx, cfg_yaml_file):
 def test_memories(idx, cfg_yaml_file):
     memories = parse_config_with_refs(cfg_yaml_file, inject_names=True, ignore_keys=['opc'])
     try:
-        for k, v in memories.items():
+        for v in memories.values():
             mem_spec = Memory.model_validate(v)
             sz = mem_spec.get_size(units='MB')
             fq = mem_spec.get_frequency(units='GHz')
@@ -115,7 +112,6 @@ def test_memories(idx, cfg_yaml_file):
     except ValidationError as e:
         print(e)
         raise
-    return
 
 
 @pytest.mark.unit
@@ -123,14 +119,13 @@ def test_memories(idx, cfg_yaml_file):
 def test_gpu_dies(idx, cfg_yaml_file):
     db = parse_config_with_refs(cfg_yaml_file, inject_names=True, ignore_keys=['opc'])
     try:
-        for gpu_die_name, gpu_die_info in db.items():
+        for gpu_die_info in db.values():
             spec = GPUDie.model_validate(gpu_die_info)
             print(spec)
     except ValidationError as e:
         print(e)
         raise
 
-    return
 
 
 @pytest.mark.unit
@@ -138,13 +133,12 @@ def test_gpu_dies(idx, cfg_yaml_file):
 def test_gpus(idx, cfg_yaml_file):
     db = parse_config_with_refs(cfg_yaml_file, inject_names=True, ignore_keys=['opc'])
     try:
-        for gpu_name, gpu_info in db.items():
+        for gpu_info in db.values():
             spec = GPU.model_validate(gpu_info)
             print(spec)
     except ValidationError as e:
         print(e)
         raise
-    return
 
 
 @pytest.mark.unit
@@ -152,13 +146,12 @@ def test_gpus(idx, cfg_yaml_file):
 def test_blades(idx, cfg_yaml_file):
     db = parse_config_with_refs(cfg_yaml_file, inject_names=True, ignore_keys=['opc'])
     try:
-        for blade_name, blade_info in db.items():
+        for blade_info in db.values():
             spec = Blade.model_validate(blade_info)
             print(spec)
     except ValidationError as e:
         print(e)
         raise
-    return
 
 
 @pytest.mark.unit
@@ -166,13 +159,12 @@ def test_blades(idx, cfg_yaml_file):
 def test_racks(idx, cfg_yaml_file):
     db = parse_config_with_refs(cfg_yaml_file, inject_names=True, ignore_keys=['opc'])
     try:
-        for rack_name, rack_info in db.items():
+        for rack_info in db.values():
             spec = Rack.model_validate(rack_info)
             print(spec)
     except ValidationError as e:
         print(e)
         raise
-    return
 
 
 @pytest.mark.unit
@@ -180,13 +172,12 @@ def test_racks(idx, cfg_yaml_file):
 def test_clusters(idx, cfg_yaml_file):
     db = parse_config_with_refs(cfg_yaml_file, inject_names=True, ignore_keys=['opc'])
     try:
-        for cluster_name, cluster_info in db.items():
+        for cluster_info in db.values():
             spec = Cluster.model_validate(cluster_info)
             print(spec)
     except ValidationError as e:
         print(e)
         raise
-    return
 
 
 # ===================================================================
@@ -257,42 +248,42 @@ class TestComputeCoreUnit:
         assert abs(result - 256.0) < 0.1
 
 
-class TestWLInfoParallelSpecShim:
-    @pytest.mark.unit
-    def notest_property_shim_returns_concrete(self):
-        wl = WLInfo(
-            wltype='BTEN',
-            wlname='w',
-            basedir='workloads',
-            source='DistributedMLP.py',
-            wli_name='inst',
-            wli_params={},
-            parallel_spec=ParallelScheme(tp=4),
-        )
-        assert wl.parallel_scheme == ParallelScheme(tp=4)
+#class TestWLInfoParallelSpecShim:
+    #@pytest.mark.unit
+    #def test_property_shim_returns_concrete(self):
+        #wl = WLInfo(
+        #    wltype='BTEN',
+        #    wlname='w',
+        #    basedir='workloads',
+        #    source='DistributedMLP.py',
+        #    wli_name='inst',
+        #    wli_params={},
+        #    parallel_spec=ParallelScheme(tp=4),
+        #)
+        #assert wl.parallel_scheme == ParallelScheme(tp=4)
 
-    @pytest.mark.unit
-    def notest_property_shim_returns_none_for_symbolic(self):
-        sym = SymbolicParallelSpec(axes={'tp': AxisSpec(domain='choices', choices=(2, 4))}, constraints=(), defaults={})
-        wl = WLInfo(
-            wltype='BTEN',
-            wlname='w',
-            basedir='workloads',
-            source='DistributedMLP.py',
-            wli_name='inst',
-            wli_params={},
-            parallel_spec=sym,
-        )
-        assert wl.parallel_scheme is None
+    #@pytest.mark.unit
+    #def test_property_shim_returns_none_for_symbolic(self):
+        #sym = SymbolicParallelSpec(axes={'tp': AxisSpec(domain='choices', choices=(2, 4))}, constraints=(), defaults={})
+        #wl = WLInfo(
+        #    wltype='BTEN',
+        #    wlname='w',
+        #    basedir='workloads',
+        #    source='DistributedMLP.py',
+        #    wli_name='inst',
+        #    wli_params={},
+        #    parallel_spec=sym,
+        #)
+        #assert wl.parallel_scheme is None
 
-    @pytest.mark.unit
-    def notest_with_parallel_scheme_wrapper_unchanged(self):
-        wl = WLInfo(
-            wltype='BTEN', wlname='w', basedir='workloads', source='DistributedMLP.py', wli_name='inst', wli_params={}
-        )
-        updated = wl.with_parallel_scheme(ParallelScheme(dp=2, tp=4))
-        assert updated.parallel_spec == ParallelScheme(dp=2, tp=4)
-        assert updated.parallel_scheme == ParallelScheme(dp=2, tp=4)
+    #@pytest.mark.unit
+    #def test_with_parallel_scheme_wrapper_unchanged(self):
+    #    wl = WLInfo(
+    #        wltype='BTEN', wlname='w', basedir='workloads', source='DistributedMLP.py', wli_name='inst', wli_params={}
+    #    )
+    #    updated = wl.with_parallel_scheme(ParallelScheme(dp=2, tp=4))
+    #    assert updated.parallel_spec == ParallelScheme(dp=2, tp=4)
+    #    assert updated.parallel_scheme == ParallelScheme(dp=2, tp=4)
 
 
 # ===================================================================
@@ -325,7 +316,7 @@ class TestMappingErrorPaths:
 # Task 013: MapInfo Optional Fields
 # ===================================================================
 
-from src.config.mapping import MapInfo, OpRemovalSpec, OpFusionSpec
+from src.config.mapping import MapInfo, OpFusionSpec, OpRemovalSpec
 
 
 class TestMapInfoOptionalFields:

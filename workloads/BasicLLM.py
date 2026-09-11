@@ -1,21 +1,28 @@
 
-import os, sys
+import os
+import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src import make_tensor
+import math
+from typing import Any
+
+import src.front.dynamic as D
 import src.front.functional as F
 import src.front.module as nn
-import src.front.dynamic as D
+from src import make_tensor
 
-import math
 
 class ATTN(nn.Module):
     def __init__(self, name, **kwargs):
         super().__init__(name)
-        self.dE           = kwargs.get('dE')
-        self.nH           = kwargs.get('nH')
-        self.idE          = kwargs.get('idE', 4*self.dE)
-        self.dH           = self.dE // self.nH
+        self.dE  = kwargs['dE']
+        self.nH  = kwargs['nH']
+        self.idE = kwargs.get('idE')
+        self.dH  = self.dE // self.nH
+
+        if self.idE is None:
+            self.idE = 4*self.dE
 
         #tensors
         self.attn_sqrt_dH = make_tensor(name=self.name + '.sqrt_dH',
@@ -38,12 +45,12 @@ class ATTN(nn.Module):
         K     = K.reshape(batch, seqlen, self.nH, self.dH).transpose(1,2)
         V     = V.reshape(batch, seqlen, self.nH, self.dH).transpose(1,2)
 
-        past_seqlen = 0
+        #past_seqlen = 0
         if past_kv is not None:
             past_k, past_v = past_kv
             K = D.cat([past_k, K], dim=2)
             V = D.cat([past_v, V], dim=2)
-            past_seqlen = past_k.size(2)
+            #past_seqlen = past_k.size(2)
 
         QK    = (Q @ K.transpose(2,3)) * self.attn_sqrt_dH
 
@@ -54,16 +61,16 @@ class ATTN(nn.Module):
         QK  = QK.softmax(dim=-1)
         QKV = (QK @ V).transpose(1,2).reshape(batch, seqlen, self.dE)
 
-        present_kv = (K, v) if use_cache else None
+        present_kv = (K, V) if use_cache else None
         output     = self.w0_proj(QKV)
         return output, present_kv
 
 class TransformerBlock(nn.Module):
     def __init__(self, name, **cfg):
         super().__init__(name)
-        self.dE          = cfg.get('dE')
-        self.nH          = cfg.get('nH')
-        self.idE         = cfg.get('idE', 4*self.dE)
+        self.dE  : int  = cfg['dE']
+        self.nH  : int  = cfg['nH']
+        self.idE : int  = cfg.get('idE', 4*self.dE)
 
         #ops
         self.ln_attn_in  = nn.LayerNorm (self.name + '.ln_attn_in', self.dE)
@@ -109,6 +116,7 @@ class BasicLLM(nn.Module):
 
         Y = self.wte(input_tokens)
         Z = self.wpe(positions)
+        Y = Y + Z
 
         if past_kv is None:
             past_kv = [None] * self.nL_proxy
@@ -124,10 +132,10 @@ class BasicLLM(nn.Module):
         for tblock in self.tblocks:
             repeated_ops: dict[str, Any] = {}
             tblock.get_ops(repeated_ops)
-            for op_name,op_obj in repeated_ops.items():
+            for op_obj in repeated_ops.values():
                 op_obj.repeat_count = self.nL
 
-        present_kv = present_kv if use_cache else None
+        present_kv = present_kv if use_cache else None #type: ignore
         return logits, present_kv
 
     def inputs(self, bs=1):

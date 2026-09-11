@@ -1,9 +1,9 @@
 
-from ..knob import KnobVal
-from ..interconnect import PCIe
-
+from loguru import logger
 from pydantic import BaseModel
-from loguru   import logger
+
+from ..interconnect import PCIe
+from ..knob import KnobVal
 
 INFO    = logger.info
 

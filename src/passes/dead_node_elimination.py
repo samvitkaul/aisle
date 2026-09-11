@@ -1,16 +1,18 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.graph import WorkloadGraph
+
     from .base import PassConfig
 
 
 class DeadNodeEliminationPass:
     name = "dead_node_elimination"
-    depends_on: list[str] = ["constant_folding"]
+    depends_on: list[str] = ["constant_folding"] #noqa: RUF012
 
-    def run(self, G: 'WorkloadGraph', config: 'PassConfig') -> 'WorkloadGraph':
+    def run(self, G: WorkloadGraph, config: PassConfig) -> WorkloadGraph:
         from src.bten.op import RemovalReason
         ordered = G.get_ordered_nodes()
         # Reverse topological order: process consumers before producers

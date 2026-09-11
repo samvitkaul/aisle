@@ -1,8 +1,8 @@
 
-from ..knob import KnobVal
+from loguru import logger
+from pydantic import BaseModel, ConfigDict, PositiveInt
 
-from pydantic import BaseModel, PositiveInt, ConfigDict
-from loguru   import logger
+from ..knob import KnobVal
 
 INFO    = logger.info
 DEBUG   = logger.debug

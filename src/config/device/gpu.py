@@ -1,12 +1,12 @@
 
-from .compute_core  import ComputeCore
-from .cache         import Cache, RegFile
-from .memory        import Memory
-from ..interconnect import PCIe, NVLink
 
-from pydantic import BaseModel, PositiveInt, model_validator, computed_field
-from typing   import Optional
-from loguru   import logger
+from loguru import logger
+from pydantic import BaseModel, PositiveInt, computed_field, model_validator
+
+from ..interconnect import NVLink, PCIe
+from .cache import Cache, RegFile
+from .compute_core import ComputeCore
+from .memory import Memory
 
 INFO    = logger.info
 DEBUG   = logger.debug
@@ -68,7 +68,7 @@ class GPU(BaseModel, extra='forbid', populate_by_name=True, frozen=True):
 
     die_count       : PositiveInt
     mem_count       : PositiveInt
-    active_sm_count : Optional[PositiveInt] = None
+    active_sm_count : PositiveInt | None = None
 
     @model_validator(mode='before')
     @classmethod
@@ -134,7 +134,7 @@ class GPU(BaseModel, extra='forbid', populate_by_name=True, frozen=True):
                 opc = core.peak_ops_per_cycle(instr, prec, strict)
             else:
                 raise
-        clkname = '.'.join([self.name, 'die', core_type, 'frequency'])
+        clkname = f'{self.name}.die.{core_type}.frequency'
         return clkname, self.num_cores(core_type) * opc
 
     def peak_bandwidth(self, interface: str, units = 'GB/s'):
@@ -156,14 +156,14 @@ class GPU(BaseModel, extra='forbid', populate_by_name=True, frozen=True):
         BpC = self.memory.peak_bytes_per_cycle() * self.mem_count
         return Clk, BpC
 
-    def default_compiler(self):
-        """Return the device's default DeviceCompiler.
-
-        Lazy-import avoids a config↔back import cycle (config is the lower
-        layer).
-        """
-        from src.back.device_compiler import DefaultDeviceCompiler
-        return DefaultDeviceCompiler()
+    #def default_compiler(self):
+    #    """Return the device's default DeviceCompiler.
+#
+#        Lazy-import avoids a config↔back import cycle (config is the lower
+#        layer).
+#        """
+#        from src.back.device_compiler import DefaultDeviceCompiler
+#        return DefaultDeviceCompiler()
 
     def topology_extents(self) -> tuple[int, int, int]:
         """Leaf-system identity: ``(num_gpu_per_blade, num_blades_per_rack,

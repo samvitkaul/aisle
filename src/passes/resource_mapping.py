@@ -1,17 +1,19 @@
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.graph import WorkloadGraph
+
     from .base import PassConfig
 
 
 class ResourceMappingPass:
     name = "resource_mapping"
-    depends_on: list[str] = ["dead_node_elimination"]
+    depends_on: list[str] = ["dead_node_elimination"] #noqa: RUF012
 
-    def run(self, G: 'WorkloadGraph', config: 'PassConfig') -> 'WorkloadGraph':
+    def run(self, G: WorkloadGraph, config: PassConfig) -> WorkloadGraph:
         # NOTE: this pass currently only annotates op.precision from the
         # output tensor dtype; rsrc_spec is not yet consumed in the body
         # (ResourceMap.op2pipe has no callers today). The precision

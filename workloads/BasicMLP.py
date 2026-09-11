@@ -1,13 +1,14 @@
 
-import os, sys
+import os
+import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src import make_tensor, make_op
+from itertools import pairwise
+
 import src.front.functional as F
 import src.front.module as nn
-import src.front.dynamic as D
-
-from itertools import pairwise
+from src import make_tensor
 
 
 def get_activation(act: str):
@@ -57,7 +58,7 @@ class BasicMLP(nn.Module):
             y = l(y)
             y = a(y)
         return y
-                
+
 if __name__ == '__main__':
     from src.graph import graph2onnx
 

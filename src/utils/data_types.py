@@ -92,7 +92,7 @@ def str2dt(dtype: str) -> DataType:
     return dt
 
 # ----- dt fallbacks -----------------
-def dt_fallbacks(dtype: DataType) -> List[DataType]:
+def dt_fallbacks(dtype: DataType) -> list[DataType]:
     _tbl = {
             DataType.INT2          : ['INT4', 'INT8', 'INT16', 'INT32', 'INT64'],
             DataType.INT4          : ['INT8', 'INT16', 'INT32', 'INT64'],

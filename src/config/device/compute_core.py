@@ -1,11 +1,12 @@
-from ...utils.data_types import DataType, str2dt, dt_fallbacks
+from collections.abc import Mapping
+from typing import Any
 
-from ..knob       import KnobVal
-from .instruction import Instruction
-
-from pydantic import BaseModel, ConfigDict, field_validator
-from typing import Mapping, Any
 from loguru import logger
+from pydantic import BaseModel, ConfigDict, field_validator
+
+from ...utils.data_types import DataType, dt_fallbacks, str2dt
+from ..knob import KnobVal
+from .instruction import Instruction
 
 INFO = logger.info
 DEBUG = logger.debug
@@ -70,7 +71,7 @@ class ComputeCore(BaseModel):
             if alt in instr.throughput:
                 return alt
 
-        available = [str(dt) for dt in instr.throughput.keys()]
+        available = [str(dt) for dt in instr.throughput]
         raise ValueError(
             f"Missing precision {prec!r} for instruction={instr.name!r} on "
             f"core={self.name!r}. Available: {available}"

@@ -1,8 +1,9 @@
 
+
 from pydantic import BaseModel, Field
-from typing import Dict, List
 
 from .knob import KnobVal
+
 
 class ExecOpStats(BaseModel, extra='forbid', populate_by_name=False, frozen=True):
     wltype           : str
@@ -13,9 +14,9 @@ class ExecOpStats(BaseModel, extra='forbid', populate_by_name=False, frozen=True
     batchsize        : int
     system_type      : str
     system           : str
-    clocks           : Dict[str, KnobVal]
+    clocks           : dict[str, KnobVal]
     tick_freq_Mhz    : int
-    ticks_per_cycle  : Dict[str, int]
+    ticks_per_cycle  : dict[str, int]
     precision        : str
     opnum            : int
     opname           : str
@@ -37,16 +38,16 @@ class ExecOpStats(BaseModel, extra='forbid', populate_by_name=False, frozen=True
     inActCount       : int
     outActCount      : int
     instr_count      : int
-    compute_ticks    : Dict[str, int]
-    mem_ticks        : Dict[str, Dict[str, int]]
-    compute_util     : Dict[str, float]
-    mem_util         : Dict[str, Dict[str, float]]
+    compute_ticks    : dict[str, int]
+    mem_ticks        : dict[str, dict[str, int]]
+    compute_util     : dict[str, float]
+    mem_util         : dict[str, dict[str, float]]
     ideal_ticks      : int
     ideal_msecs      : float
     ticks            : int
     msecs            : float
     rsrc_bnck        : str
-    network_ticks       : Dict[str, Dict[str, int]]
+    network_ticks       : dict[str, dict[str, int]]
     network_ticks_total : int
     network_msecs    : float
     unpriced_reason  : str = ''
@@ -65,9 +66,9 @@ class SummaryStatsRecord(BaseModel, extra='forbid', populate_by_name=False, froz
     world_size               : int = 1
     system_type              : str
     system                   : str
-    clocks                   : Dict[str, KnobVal]
+    clocks                   : dict[str, KnobVal]
     tick_freq_Mhz            : int
-    ticks_per_cycle          : Dict[str, int]
+    ticks_per_cycle          : dict[str, int]
     mem_size_GB              : float
     mem_size_per_rank_GB     : float = 0.0
     device_memsize_GB        : float
@@ -99,17 +100,17 @@ class SummaryStatsRecord(BaseModel, extra='forbid', populate_by_name=False, froz
     rsrc_nw                  : float = 0.0
     tot_network_ticks        : int
     tot_network_msecs        : float
-    network_ticks_by_network : Dict[str, int]
-    network_util_by_network  : Dict[str, float] = Field(default_factory=dict)
+    network_ticks_by_network : dict[str, int]
+    network_util_by_network  : dict[str, float] = Field(default_factory=dict)
     n_ccl_ops                : int
     n_priced_ccl_ops         : int = 0
     n_unpriced_ccl_ops       : int = 0
 
 class ExecStatsReport(BaseModel, extra='forbid', populate_by_name=False, frozen=True):
-    opstats: List[ExecOpStats]
+    opstats: list[ExecOpStats]
 
 class SummaryStats(BaseModel, extra='forbid', populate_by_name=False, frozen=True):
-    runstats: List[SummaryStatsRecord]
+    runstats: list[SummaryStatsRecord]
 
 
 _EXECOPSTATS_FIELDS: tuple[str, ...] = tuple(ExecOpStats.model_fields)

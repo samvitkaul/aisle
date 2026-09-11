@@ -3,8 +3,8 @@ import pytest
 
 from src.bten.op import TensorOp, make_op
 from src.bten.tensor import make_tensor
-from src.utils.sym import SymDim, SymExpr
 from src.graph import WorkloadGraph, rebind_symbolic_dims
+from src.utils.sym import SymDim, SymExpr
 
 #from tests.test_graph_serde._fixtures import make_sym_test
 from ._fixtures import make_sym_test

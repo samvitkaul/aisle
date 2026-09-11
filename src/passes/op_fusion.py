@@ -1,13 +1,15 @@
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.graph import WorkloadGraph
+
     from .base import PassConfig
 
 
-def find_fusion_candidates(G: 'WorkloadGraph', fusion_spec) -> list:
+def find_fusion_candidates(G: WorkloadGraph, fusion_spec) -> list:
     """Find op sequences matching fusion patterns in the graph."""
     # Normalize input: accept OpFusionSpec or raw list
     if hasattr(fusion_spec, 'op_sequences'):
@@ -80,9 +82,9 @@ def find_fusion_candidates(G: 'WorkloadGraph', fusion_spec) -> list:
 
 class OpFusionPass:
     name = "op_fusion"
-    depends_on: list[str] = ["resource_mapping"]
+    depends_on: list[str] = ["resource_mapping"] #noqa: RUF012
 
-    def run(self, G: 'WorkloadGraph', config: 'PassConfig') -> 'WorkloadGraph':
+    def run(self, G: WorkloadGraph, config: PassConfig) -> WorkloadGraph:
         if config.op_fusion_spec is None:
             return G
         fusion_candidates = find_fusion_candidates(G, config.op_fusion_spec)

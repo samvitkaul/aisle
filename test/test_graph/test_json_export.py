@@ -7,9 +7,9 @@ import pytest
 
 from src.bten.op import TensorOp, make_op
 from src.bten.tensor import make_tensor
+from src.graph import WorkloadGraph, graph2json
 from src.utils.data_types import DataType
 from src.utils.sym import SymDim, SymExpr
-from src.graph import WorkloadGraph, graph2json
 
 from ._fixtures import (
     make_const_param,

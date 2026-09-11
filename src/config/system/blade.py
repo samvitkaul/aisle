@@ -1,15 +1,16 @@
 
+from typing import ClassVar
+
+from loguru import logger
+from pydantic import BaseModel, PositiveInt, model_validator
+
 from ..device.gpu import GPU
 from ..device.memory import Memory
-from .cpu import CPU
-from .nvme import NVME
-from .nic import NIC
 from ..interconnect import _BladeFabricUnion
 from . import CompositeSystemMixin
-
-from pydantic import BaseModel, PositiveInt, model_validator
-from typing import ClassVar, Optional
-from loguru   import logger
+from .cpu import CPU
+from .nic import NIC
+from .nvme import NVME
 
 INFO    = logger.info
 DEBUG   = logger.debug
@@ -32,7 +33,7 @@ class Blade(CompositeSystemMixin, BaseModel, extra='forbid', populate_by_name=Tr
     num_nvme         : PositiveInt
     num_nics         : PositiveInt
     # Task 039 N3: discriminated-union routes raw dicts via ``fabric_kind``.
-    gpu_interconnect : Optional[_BladeFabricUnion] = None
+    gpu_interconnect : _BladeFabricUnion | None = None
 
     @model_validator(mode='after')
     def _require_fabric_for_distributed_blade(self) -> 'Blade':

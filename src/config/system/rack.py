@@ -1,12 +1,13 @@
 
-from .blade import Blade
-from .nic import NIC
+from typing import ClassVar
+
+from loguru import logger
+from pydantic import BaseModel, Field, PositiveInt
+
 from ..interconnect import _RackFabricUnion
 from . import CompositeSystemMixin
-
-from pydantic import BaseModel, PositiveInt, Field
-from typing import ClassVar, Optional
-from loguru   import logger
+from .blade import Blade
+from .nic import NIC
 
 INFO    = logger.info
 DEBUG   = logger.debug
@@ -37,9 +38,9 @@ class Rack(CompositeSystemMixin, BaseModel, extra='forbid', populate_by_name=Tru
     blade               : Blade
     num_blades          : PositiveInt
     blade_interconnect  : _RackFabricUnion
-    cooling_capacity_kW : Optional[float] = Field(default=None, gt=0.0)
-    power_capacity_kW   : Optional[float] = Field(default=None, gt=0.0)
-    management_network  : Optional[NIC] = None
+    cooling_capacity_kW : float | None = Field(default=None, gt=0.0)
+    power_capacity_kW   : float | None = Field(default=None, gt=0.0)
+    management_network  : NIC | None = None
 
     # Task 039 N3: discriminated-union routes raw dicts via ``fabric_kind``.
 

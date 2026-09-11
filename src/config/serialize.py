@@ -1,14 +1,14 @@
 
-from typing import TypeVar, TYPE_CHECKING, Any
-from enum import Enum, auto
-from functools import lru_cache
-from loguru import logger
-from copy import deepcopy
-import numpy as np
-import yaml
 import json
 import pickle
+from copy import deepcopy
+from enum import Enum, auto
+from functools import lru_cache
+from typing import TYPE_CHECKING, Any, TypeVar
 
+import numpy as np
+import yaml
+from loguru import logger
 from pydantic import BaseModel
 
 BaseModel_SubType = TypeVar('BaseModel_SubType', bound=BaseModel)
@@ -54,7 +54,7 @@ def _process_np_attr(v: np.ndarray, op_index: int, opstats: Any, k: str) -> None
         )
     opstats.attrs[k] = value_for_output
 
-def _prepare_model_for_json(model: BaseModel_SubType) -> BaseModel_SubType:
+def _prepare_model_for_json[BaseModel_SubType: BaseModel](model: BaseModel_SubType) -> BaseModel_SubType:
     """Prepare a Pydantic model for JSON serialization by handling numpy arrays.
 
     Checks for numpy arrays in opstats attributes and creates a deep copy

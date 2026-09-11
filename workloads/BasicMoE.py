@@ -1,21 +1,26 @@
 
 
-import os, sys
+import os
+import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.utils.sym import sym_ceil_mul
-from src.front import make_front_tensor
+
+import src.front.dynamic as D
 import src.front.functional as F
 import src.front.module as nn
-import src.front.dynamic as D
+from src.front import make_front_tensor
+from src.utils.sym import sym_ceil_mul
 
-from typing import Optional
 
 class DenseExpert(nn.Module):
     def __init__(self, name, **kwargs):
         super().__init__(name)
-        self.dE  : int = kwargs.get('dE')
-        self.dFF : int = kwargs.get('dFF', 4*self.dE)
+        self.dE   = kwargs['dE']
+        self.dFF  = kwargs.get('dFF')
+
+        if self.dFF is None:
+            self.dFF = 4*self.dE
 
         self.ff1  = nn.Linear(self.name + '.ff1', self.dE, self.dFF)
         self.ff2  = nn.Linear(self.name + '.ff2', self.dFF, self.dE)
@@ -27,8 +32,11 @@ class DenseExpert(nn.Module):
 class SwiGluExpert(nn.Module):
     def __init__(self, name, **kwargs):
         super().__init__(name)
-        self.dE  : int = kwargs.get('dE')
-        self.dFF : int = kwargs.get('dFF', 4*self.dE)
+        self.dE  = kwargs['dE']
+        self.dFF = kwargs.get('dFF')
+
+        if self.dFF is None:
+            self.dFF = 4*self.dE
 
         self.gate  = nn.Linear(self.name + '.gate',  self.dE,  self.dFF)
         self.value = nn.Linear(self.name + '.value', self.dE,  self.dFF)
@@ -46,7 +54,7 @@ class SwiGluExpert(nn.Module):
 class DenseMoE(nn.Module):
     def __init__(self, name, **kwargs):
         super().__init__(name)
-        self.dE       : int   = kwargs.get('dE')
+        self.dE       : int   = kwargs['dE']
         self.nE       : int   = kwargs.get('nE', 1) #num_experts
         self.aE       : int   = kwargs.get('aE', 1) #active experts
         self.sE       : int   = kwargs.get('sE', 0) #shared experts
@@ -111,7 +119,7 @@ class DenseMoE(nn.Module):
            exposes (Softmax, Slice, Mul, Add)
         """
         full_weights = router_logits.softmax(dim=-1) #[num_tokens, nE]
-        
+
         #expert capacity (static -- no dynamic drop possible in trace)
         total_assignments   = num_tokens * self.aE
         expert_capacity     = sym_ceil_mul(total_assignments, self.cFactor, divisor=self.nE)
@@ -141,9 +149,9 @@ class DenseMoE(nn.Module):
                         is_const=True
                         )
                 shared_output = shared_output * inv_sE
-            output = output + shared_output
+            output = output + shared_output #type: ignore
 
-        output = output.reshape(batch, seqlen, self.dE)
+        output = output.reshape(batch, seqlen, self.dE) #type: ignore
 
         auxinfo = dict(
                 expert_capacity=expert_capacity,
@@ -174,14 +182,14 @@ class SparseMoE(nn.Module):
 
        Drop in API compatible with DenseMoE
 
-       dispatch_indices and combine_weights are declared const tensors with data=None so 
+       dispatch_indices and combine_weights are declared const tensors with data=None so
        graph2onnx auto fills random placeholders at export time. The trace's shape and byte
        movement are faithful - but numeric output is not comparable to any reference
        PyTorch MoE forward pass
     """
     def __init__(self, name, **kwargs):
         super().__init__(name)
-        self.dE       : int   = kwargs.get('dE')
+        self.dE       : int   = kwargs['dE']
         self.nE       : int   = kwargs.get('nE', 1) #num_experts
         self.aE       : int   = kwargs.get('aE', 1) #active experts
         self.sE       : int   = kwargs.get('sE', 0) #shared experts

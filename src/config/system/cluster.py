@@ -1,11 +1,12 @@
 
-from .rack import Rack
+from typing import Any, ClassVar
+
+from loguru import logger
+from pydantic import BaseModel, PositiveInt
+
 from ..interconnect import _DataCenterFabricUnion
 from . import CompositeSystemMixin
-
-from pydantic import BaseModel, PositiveInt
-from typing import Any, ClassVar, Dict, Optional
-from loguru   import logger
+from .rack import Rack
 
 INFO    = logger.info
 DEBUG   = logger.debug
@@ -35,8 +36,8 @@ class Cluster(CompositeSystemMixin, BaseModel, extra='forbid', populate_by_name=
     rack                : Rack
     num_racks           : PositiveInt
     rack_interconnect   : _DataCenterFabricUnion
-    orchestration_layer : Optional[str] = None
-    region_info         : Optional[Dict[str, Any]] = None
+    orchestration_layer : str | None = None
+    region_info         : dict[str, Any] | None = None
 
     # Task 039 N3: discriminated-union routes raw dicts via ``fabric_kind``.
 

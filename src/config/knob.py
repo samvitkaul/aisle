@@ -1,7 +1,9 @@
-from pydantic_core import CoreSchema, core_schema
-from pydantic import GetCoreSchemaHandler
-from enum import Enum
 import re
+from enum import Enum
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
 
 class MetricPrefix(Enum):
     """Common SI metric prefixes represented as the power of 10"""
@@ -44,7 +46,7 @@ def parse_unitstr(unit_str: str):
 
     per_sec  = False
     us       = unit_str
-    if us.endswith("/s") or us.endswith("ps"):
+    if us.endswith(("/s", "ps")):
         per_sec = True
         us      = us[:-2]
     elif us.lower().endswith("/sec"):

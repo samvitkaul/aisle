@@ -10,7 +10,6 @@ import pytest
 from src.utils.data_types import DataType as DT
 from src.utils.data_types import promote_types
 
-
 _p = promote_types
 
 

@@ -1,16 +1,18 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.graph import WorkloadGraph
+
     from .base import PassConfig
 
 
 class ConstantFoldingPass:
     name = "constant_folding"
-    depends_on: list[str] = ["op_removal"]
+    depends_on: list[str] = ["op_removal"] #noqa: RUF012
 
-    def run(self, G: 'WorkloadGraph', config: 'PassConfig') -> 'WorkloadGraph':
+    def run(self, G: WorkloadGraph, config: PassConfig) -> WorkloadGraph:
         from src.bten.op import RemovalReason
         for opname in G.get_ordered_nodes():
             op = G.get_op(opname)
@@ -32,7 +34,7 @@ class ConstantFoldingPass:
         return G
 
     @staticmethod
-    def _is_const_or_removed(G: 'WorkloadGraph', tname: str) -> bool:
+    def _is_const_or_removed(G: WorkloadGraph, tname: str) -> bool:
         tensor = G.get_tensor(tname)
         if tensor.is_const or tensor.is_param:
             return True

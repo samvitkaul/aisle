@@ -1,5 +1,7 @@
-from .instruction  import Instruction as Instruction
+from .cache import Cache as Cache
+from .cache import RegFile as RegFile
 from .compute_core import ComputeCore as ComputeCore
-from .cache        import Cache as Cache, RegFile as RegFile
-from .memory       import Memory as Memory
-from .gpu          import GPUDie as GPUDie, GPU as GPU
+from .gpu import GPU as GPU
+from .gpu import GPUDie as GPUDie
+from .instruction import Instruction as Instruction
+from .memory import Memory as Memory

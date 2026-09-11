@@ -2,8 +2,9 @@
 """Lightweight symbolic integral/fractional types for runtime configurable size manipulations"""
 
 from __future__ import annotations
-from fractions import Fraction
+
 from dataclasses import fields, is_dataclass, replace
+from fractions import Fraction
 
 
 class _PySymExpr:

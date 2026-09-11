@@ -1,12 +1,11 @@
 
 import pytest
 
-from src.bten.tensor      import make_tensor
-from src.bten.op          import make_op
-from src.graph            import WorkloadGraph, graph2onnx
-from src.config.mapping   import OpFusionSpec
 from src.back.kernel_desc import KernelDescriptor
-
+from src.bten.op import make_op
+from src.bten.tensor import make_tensor
+from src.config.mapping import OpFusionSpec
+from src.graph import WorkloadGraph, graph2onnx
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -625,9 +624,11 @@ class TestCloneForExecute:
     def notest_clone_for_execute_end_to_end_parity_with_deepcopy(self):
         """execute_graph on clone produces byte-identical ExecOpStats vs on deepcopy."""
         from copy import deepcopy
-        from src.back.system import ExecSystem
-        from src.config import WLInfo, MapInfo, parse_config_with_refs
+
         from psim import process_wlgraph_symbolic
+        from src.back.system import ExecSystem
+
+        from src.config import MapInfo, WLInfo, parse_config_with_refs
 
         def _device_cfg():
             d = parse_config_with_refs('config/tests/gpus.yml',

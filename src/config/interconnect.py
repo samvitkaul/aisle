@@ -1,14 +1,26 @@
 
-from .knob import KnobVal
-
-from pydantic import (
-    BaseModel, Discriminator, Field, PositiveInt, TypeAdapter, model_validator,
-)
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import (
-    Annotated, Any, ClassVar, Iterable, Iterator, Literal, Optional,
-    Union, get_args, get_origin, get_type_hints,
+    Annotated,
+    Any,
+    ClassVar,
+    Literal,
+    get_args,
+    get_origin,
+    get_type_hints,
 )
+
+from pydantic import (
+    BaseModel,
+    Discriminator,
+    Field,
+    PositiveInt,
+    TypeAdapter,
+    model_validator,
+)
+
+from .knob import KnobVal
 
 # ---------------------------------------------------------------------------
 # NetworkSpec polymorphic base + invariants.
@@ -39,7 +51,7 @@ class OwnerContext:
     spec sits on the system root.
     """
     owner_path: tuple[str, ...]
-    owner: Optional[BaseModel] = None
+    owner: BaseModel | None = None
 
 
 class NetworkSpec(BaseModel, extra='forbid', populate_by_name=True, frozen=True):
@@ -74,13 +86,13 @@ class NetworkSpec(BaseModel, extra='forbid', populate_by_name=True, frozen=True)
     def member_endpoint_ids(self, owner_ctx: 'OwnerContext') -> frozenset[str]:
         raise NotImplementedError
 
-    def price_collective(self, ccl_type, msg_bytes, group_size):
-        try:
-            from src.back.ccl_cost import default_price
-        except ImportError as exc:
-            raise NotImplementedError(
-                "price_collective is wired in N1") from exc
-        return default_price(self, ccl_type, msg_bytes, group_size)
+    #def price_collective(self, ccl_type, msg_bytes, group_size):
+    #    try:
+    #        from src.back.ccl_cost import default_price
+    #    except ImportError as exc:
+    #        raise NotImplementedError(
+    #            "price_collective is wired in N1") from exc
+    #    return default_price(self, ccl_type, msg_bytes, group_size)
 
 
 class PCIe(BaseModel, extra='forbid', populate_by_name=True, frozen=True):
@@ -160,7 +172,7 @@ class HybridRackFabric(RackFabric, extra='forbid', populate_by_name=True, frozen
 
 
 _RackFabricUnion = Annotated[
-    Union[NVLinkSwitchRackFabric, PCIeSwitchRackFabric, HybridRackFabric],
+    NVLinkSwitchRackFabric | PCIeSwitchRackFabric | HybridRackFabric,
     Discriminator('fabric_kind'),
 ]
 
@@ -171,7 +183,7 @@ class DataCenterFabric(NetworkSpec, extra='forbid', populate_by_name=True, froze
     uplink_bandwidth      : KnobVal
     inter_rack_latency    : KnobVal
     link_redundancy       : PositiveInt = Field(default=1, ge=1)
-    switch_model          : Optional[str] = None
+    switch_model          : str | None = None
 
     @model_validator(mode='after')
     def _forbid_abstract_dcfabric(self):
@@ -216,7 +228,7 @@ class FullMeshDataCenterFabric(DataCenterFabric, extra='forbid', populate_by_nam
 
 
 _DataCenterFabricUnion = Annotated[
-    Union[SpineLeafDataCenterFabric, ClosDataCenterFabric, FullMeshDataCenterFabric],
+    SpineLeafDataCenterFabric | ClosDataCenterFabric | FullMeshDataCenterFabric,
     Discriminator('fabric_kind'),
 ]
 
@@ -270,15 +282,15 @@ class NVSwitchBladeFabric(BladeFabric, extra='forbid', populate_by_name=True, fr
     fabric_kind: Literal['nvswitch']
     topology_kind: ClassVar[NetworkTopologyKind] = 'switched'
 
-    def price_collective(self, ccl_type, msg_bytes, group_size):
-        from src.back.ccl_cost import str2ccl, CCLType
-        try:
-            kind = str2ccl(ccl_type) if isinstance(ccl_type, str) else ccl_type
-        except Exception:
-            return super().price_collective(ccl_type, msg_bytes, group_size)
-        if kind is CCLType.AR:
-            return self.alpha_seconds() + self.beta_seconds_per_byte() * msg_bytes
-        return super().price_collective(ccl_type, msg_bytes, group_size)
+    #def price_collective(self, ccl_type, msg_bytes, group_size):
+    #    from src.back.ccl_cost import CCLType, str2ccl
+    #    try:
+    #        kind = str2ccl(ccl_type) if isinstance(ccl_type, str) else ccl_type
+    #    except Exception:
+    #        return super().price_collective(ccl_type, msg_bytes, group_size)
+    #    if kind is CCLType.AR:
+    #        return self.alpha_seconds() + self.beta_seconds_per_byte() * msg_bytes
+    #    return super().price_collective(ccl_type, msg_bytes, group_size)
 
 
 class NVLinkFullMeshBladeFabric(BladeFabric, extra='forbid', populate_by_name=True, frozen=True):
@@ -302,10 +314,7 @@ class HybridBladeFabric(BladeFabric, extra='forbid', populate_by_name=True, froz
 
 
 _BladeFabricUnion = Annotated[
-    Union[
-        NVSwitchBladeFabric, NVLinkFullMeshBladeFabric,
-        NVLinkHypercubeBladeFabric, PCIePeerBladeFabric, HybridBladeFabric,
-    ],
+    NVSwitchBladeFabric | NVLinkFullMeshBladeFabric | NVLinkHypercubeBladeFabric | PCIePeerBladeFabric | HybridBladeFabric,
     Discriminator('fabric_kind'),
 ]
 
@@ -346,7 +355,7 @@ def _walk_invariants(obj: Any, path: tuple[str, ...], seen: set[int]) -> None:
     cls = type(obj)
     try:
         hints = get_type_hints(cls)
-    except Exception:
+    except Exception: # noqa: BLE001
         hints = {}
 
     for fname in cls.__pydantic_fields__:
@@ -406,14 +415,14 @@ def _enforce_no_stray_networkspec(value: Any, ann_has_networkspec: bool,
     if ann_has_networkspec:
         return
     if isinstance(value, NetworkSpec):
-        raise ValueError(
+        raise TypeError(
             f"field '{field_path}' holds a NetworkSpec instance "
             f"({type(value).__name__!r}) but its static annotation does not "
             f"include NetworkSpec; widen the field type to NetworkSpec")
     if isinstance(value, (list, tuple)):
         for i, elt in enumerate(value):
             if isinstance(elt, NetworkSpec):
-                raise ValueError(
+                raise TypeError(
                     f"field '{field_path}[{i}]' holds a NetworkSpec instance "
                     f"({type(elt).__name__!r}) but its static annotation "
                     f"does not include NetworkSpec; widen the field type")
@@ -462,7 +471,7 @@ def _walk_networks(obj: Any, path: tuple[str, ...],
 
 def _yield_from_value(value: Any, field_path: tuple[str, ...],
                       seen: set[int],
-                      owner: Optional[BaseModel] = None
+                      owner: BaseModel | None = None
                       ) -> Iterator[tuple[NetworkSpec, 'OwnerContext']]:
     if isinstance(value, NetworkSpec):
         parent_path = field_path[:-1]

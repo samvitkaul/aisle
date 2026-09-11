@@ -1,6 +1,6 @@
 
+from loguru import logger
 from pydantic import BaseModel
-from loguru   import logger
 
 INFO    = logger.info
 

@@ -1,6 +1,7 @@
 
+from typing import Any
+
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 
 from src.utils.common import parse_yaml
 
@@ -14,23 +15,23 @@ class OpRemovalSpec(BaseModel, extra='forbid', populate_by_name=False, frozen=Tr
         return op_name in self.op_names
 
     @staticmethod
-    def from_list(op_list: List[OpName]) -> 'OpRemovalSpec':
+    def from_list(op_list: list[OpName]) -> 'OpRemovalSpec':
         return OpRemovalSpec(op_names={x.upper() for x in (op_list or [])})
 
 class OpFusionSpec(BaseModel):
-    op_sequences: List[List[OpName]] = Field(..., description="Prioritized Op Fusion Sequences")
+    op_sequences: list[list[OpName]] = Field(..., description="Prioritized Op Fusion Sequences")
 
     def get_op_fusion_sequence(self):
         for seq in self.op_sequences:
-            yield seq
+            yield from seq
 
     @staticmethod
-    def from_list(spec: List[List[OpName]]) -> 'OpFusionSpec':
+    def from_list(spec: list[list[OpName]]) -> 'OpFusionSpec':
         op_fusion_list = [[y.upper() for y in x] for x in (spec or [])]
         return OpFusionSpec(op_sequences=op_fusion_list)
 
 class ResourceMap(BaseModel):
-    op_map: Dict[OpName, PipeName] = Field(..., description='op2rsrc mapping')
+    op_map: dict[OpName, PipeName] = Field(..., description='op2rsrc mapping')
 
     def op2pipe(self, op_name: OpName) -> PipeName:
         try:
@@ -52,9 +53,9 @@ class ResourceMap(BaseModel):
         return ResourceMap(op_map=tbl)
 
 class MapInfo(BaseModel, extra='forbid', frozen=True):
-    op_removal_spec: Optional[OpRemovalSpec] = None
-    op_fusion_spec : Optional[OpFusionSpec]  = None
-    rsrc_spec      : Optional[ResourceMap]   = None
+    op_removal_spec: OpRemovalSpec | None = None
+    op_fusion_spec : OpFusionSpec | None  = None
+    rsrc_spec      : ResourceMap | None   = None
 
     @staticmethod
     def from_yaml(cfg_yaml_file: str) -> 'MapInfo':

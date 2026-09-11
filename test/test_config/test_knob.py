@@ -2,10 +2,11 @@
 import pytest
 
 from src.config.knob import (
-    MetricPrefix,
     BaseUnit,
     KnobVal,
+    MetricPrefix,
 )
+
 
 @pytest.mark.unit
 @pytest.mark.parametrize(

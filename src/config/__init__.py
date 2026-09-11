@@ -1,13 +1,15 @@
 
 from typing import Any
 
-from .knob import KnobVal, BaseUnit
-from .workload import WLInfo as WLInfo
-from .mapping import MapInfo as MapInfo
-from .serialize import OutFormat as OutFormat, dump_model as dump_model
-from .parser import parse_config_with_refs as parse_config_with_refs
-
 from pydantic import BaseModel
+
+from .knob import BaseUnit, KnobVal
+from .mapping import MapInfo as MapInfo
+from .parser import parse_config_with_refs as parse_config_with_refs
+from .serialize import OutFormat as OutFormat
+from .serialize import dump_model as dump_model
+from .workload import WLInfo as WLInfo
+
 
 def _walk_clocks(model: BaseModel, prefix: str, out: dict) -> None:
     for field_name in type(model).model_fields:
@@ -69,7 +71,7 @@ def dedupe_identical_clocks(
 ) -> tuple[dict[str, 'KnobVal'], dict[str, str]]:
     """Collapse repeated KnobVal entries with the same value into one rep.
 
-    Highly-elaborated configs (e.g. a QualcommCard with 24x4x4 PUs) emit
+    Highly-elaborated configs emit
     ~1k clock entries with only a handful of unique frequency values.
     For LCM / cost-dict purposes only one representative per unique value
     is needed.

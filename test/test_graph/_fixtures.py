@@ -3,10 +3,10 @@
 Re-hosted from ``tests/test_graph.py::TestGraph2Onnx`` so the JSON
 round-trip property test has stable access to the 9 fixtures.
 """
-from src.bten.tensor import make_tensor
 from src.bten.op import make_op
-from src.utils.sym import SymDim
+from src.bten.tensor import make_tensor
 from src.graph import WorkloadGraph
+from src.utils.sym import SymDim
 
 
 def _build(name, tensors, ops):

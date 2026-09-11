@@ -5,7 +5,6 @@ from onnx import TensorProto, helper
 
 from src.bten.op import TensorOp
 from src.bten.tensor import make_tensor
-from src.utils.sym import SymDim, SymExpr
 from src.graph import (
     ONNX_LOSSY,
     WorkloadGraph,
@@ -13,6 +12,7 @@ from src.graph import (
     graph_equiv,
     onnx2graph,
 )
+from src.utils.sym import SymDim, SymExpr
 
 from ._fixtures import (
     ALL_GRAPH_FIXTURES,

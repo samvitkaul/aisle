@@ -1,29 +1,30 @@
 
 from __future__ import annotations
-from typing import Protocol, Any, List, Optional, runtime_checkable, TYPE_CHECKING
+
 from dataclasses import dataclass
-from graphlib import TopologicalSorter, CycleError
+from graphlib import CycleError, TopologicalSorter
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from src.graph import WorkloadGraph
     from src.config.mapping import MapInfo
+    from src.graph import WorkloadGraph
 
 
 @runtime_checkable
 class GraphPass(Protocol):
     name: str
-    depends_on: List[str]
-    def run(self, G: 'WorkloadGraph', config: 'PassConfig') -> 'WorkloadGraph': ...
+    depends_on: list[str]
+    def run(self, G: WorkloadGraph, config: PassConfig) -> WorkloadGraph: ...
 
 @dataclass
 class PassConfig:
     """Configuration passed to all optimization passes."""
-    op_removal_spec: Optional[Any] = None
-    op_fusion_spec:  Optional[Any] = None
-    rsrc_spec:       Optional[Any] = None
+    op_removal_spec: Any | None = None
+    op_fusion_spec:  Any | None = None
+    rsrc_spec:       Any | None = None
 
     @staticmethod
-    def from_mapinfo(mapinfo: 'MapInfo') -> 'PassConfig':
+    def from_mapinfo(mapinfo: MapInfo) -> PassConfig:
         return PassConfig(
             op_removal_spec=mapinfo.op_removal_spec,
             op_fusion_spec=mapinfo.op_fusion_spec,
@@ -32,9 +33,9 @@ class PassConfig:
 
 class PassPipeline:
     def __init__(self):
-        self.passes: List[GraphPass] = []
+        self.passes: list[GraphPass] = []
 
-    def add(self, p: GraphPass) -> 'PassPipeline':
+    def add(self, p: GraphPass) -> PassPipeline:
         if any(existing.name == p.name for existing in self.passes):
             raise ValueError(
                 f"PassPipeline: duplicate pass name {p.name!r}")
@@ -53,7 +54,7 @@ class PassPipeline:
                         f"PassPipeline: pass {p.name!r} depends on "
                         f"unknown pass {dep!r}")
 
-    def _ordered_passes(self) -> List[GraphPass]:
+    def _ordered_passes(self) -> list[GraphPass]:
         # Insertion-order index gives a stable tie-break across topo levels.
         order_idx = {p.name: i for i, p in enumerate(self.passes)}
         by_name = {p.name: p for p in self.passes}
@@ -66,7 +67,7 @@ class PassPipeline:
             raise ValueError(
                 f"PassPipeline: dependency cycle involving {list(e.args[1])!r}"
             ) from None
-        result: List[GraphPass] = []
+        result: list[GraphPass] = []
         while sorter.is_active():
             ready = sorted(sorter.get_ready(), key=order_idx.__getitem__)
             for name in ready:
@@ -74,7 +75,7 @@ class PassPipeline:
                 sorter.done(name)
         return result
 
-    def run(self, G: 'WorkloadGraph', config: PassConfig) -> 'WorkloadGraph':
+    def run(self, G: WorkloadGraph, config: PassConfig) -> WorkloadGraph:
         self.validate()
         for p in self._ordered_passes():
             G = p.run(G, config)
