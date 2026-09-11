@@ -1,0 +1,15 @@
+nvlink_rackswitch:
+  fabric_kind: nvlink_switch
+  switch_model: Nvidia Rackswitch P5500
+  bandwidth_per_port: 900Gbps
+  latency: 100ns
+  num_ports: 64
+  oversubscription: 1.0
+
+pcie_rackswitch:
+  fabric_kind: pcie_switch
+  switch_model: Nvidia Rackswitch P5500
+  bandwidth_per_port: 400Gbps
+  latency: 150ns
+  num_ports: 64
+  oversubscription: 1.0

@@ -1,0 +1,13 @@
+nvswitch_8gpu:
+  fabric_kind: nvswitch
+  bandwidth_per_link: 900Gbps
+  latency: 100ns
+  num_links_per_gpu: 18
+  oversubscription: 1.0
+
+pcie_peer_only:
+  fabric_kind: pcie_peer
+  bandwidth_per_link: 64Gbps
+  latency: 500ns
+  num_links_per_gpu: 1
+  oversubscription: 1.0

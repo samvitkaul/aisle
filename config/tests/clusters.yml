@@ -1,0 +1,5 @@
+small_cluster:
+  rack: standard_rack@config/tests/racks.yml
+  num_racks: 16
+  rack_interconnect: clos_fabric@config/tests/dc_fabrics.yml
+  orchestration_layer: kubernetes

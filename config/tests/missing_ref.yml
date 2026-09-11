@@ -1,0 +1,5 @@
+tensor_core:
+  frequency    : '1333 MHz'
+  instructions : matrix_isa@config/tests/instructions.yml
+  missing      : anything@config/tests/missing.yml
+

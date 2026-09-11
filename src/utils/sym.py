@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import fields, is_dataclass, replace
+from fractions import Fraction
 
 
 class _PySymExpr:
@@ -312,7 +313,59 @@ def is_divisible_by(expr, n: int) -> bool | None:
             return True
     return None
 
+def sym_ceil_mul(expr, factor, divisor: int = 1):
+    """Return ``ceil(expr * factor / divisor)`` as an int-resolving SymExpr
+    (or plain ``int`` when ``expr`` is concrete).
 
+    ``SymExpr`` is intentionally integer-only -- it models tensor dimensions,
+    which are natural numbers, and the rest of the simulator (``symbol_env:
+    dict[str, int]``, ``TickClock``, shape inference, cost models) assumes
+    integer resolution. This helper lets a workload scale an integer dim by
+    a rational factor and round up (e.g. an MoE capacity factor
+    ``ceil(N * cFactor / E)``) without introducing floats into ``SymExpr``.
+
+    Parameters
+    ----------
+    expr    : int | SymDim | SymExpr
+        The integer-valued operand to scale.
+    factor  : int | float | Fraction
+        The rational scalar to apply. ``float`` is converted exactly via
+        ``float.as_integer_ratio()`` (so ``1.25`` becomes ``(5, 4)``).
+    divisor : int
+        Extra positive integer divisor (default ``1``).
+
+    The rewrite emitted is ``(expr * num + total_den - 1) // total_den``,
+    using only ``*``, ``+``, ``//`` -- operators ``SymExpr`` already
+    supports.
+    """
+    if isinstance(factor, bool) or not isinstance(factor, (int, float, Fraction)):
+        raise TypeError(
+            f"sym_ceil_mul: factor must be int, float, or Fraction; got {type(factor).__name__}"
+        )
+    if isinstance(divisor, bool) or not isinstance(divisor, int):
+        raise TypeError(
+            f"sym_ceil_mul: divisor must be int; got {type(divisor).__name__}"
+        )
+    if divisor <= 0:
+        raise ValueError(f"sym_ceil_mul: divisor must be positive; got {divisor}")
+
+    if isinstance(factor, int):
+        num, den = factor, 1
+    elif isinstance(factor, float):
+        num, den = factor.as_integer_ratio()
+    else:  # Fraction
+        num, den = factor.numerator, factor.denominator
+
+    total_den = den * divisor
+    if num <= 0:
+        raise ValueError(f"sym_ceil_mul: factor must be positive; got {factor}")
+    if total_den <= 0:
+        raise ValueError(
+            f"sym_ceil_mul: total denominator must be positive; got {total_den}"
+        )
+
+    # Works on both ints and SymExpr/SymDim using only * + // operators.
+    return (expr * num + total_den - 1) // total_den
 ###########################################################
 
 def _subs_value(v, env: dict[str, int], cache=None):

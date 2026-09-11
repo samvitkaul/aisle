@@ -1,0 +1,8 @@
+B100:
+  form_factor: SXM6
+  die        : GB102@config/tests/gpu_dies.yml
+  memory     : hbm3e@config/tests/memory.yml
+  pcie       : blackwell_pcie@config/tests/pcie.yml
+  nvlink     : blackwell_nvlink@config/tests/nvlink.yml
+  die_count  : 1
+  mem_count  : 5

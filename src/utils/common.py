@@ -41,6 +41,17 @@ def parse_csv(csvfilename):
 
     return rows, cols
 
+def print_csv_tuples(fieldnames, rows_iter, filename):
+    """Fast path: caller supplies tuples already ordered by fieldnames.
+
+    Bypasses csv.DictWriter (per-row dict.get loop). Used by
+    dump_opstats / dump_summary where field order is fixed at import.
+    """
+    with open(filename, 'w', newline='') as ocsv:
+        w = csv.writer(ocsv)
+        w.writerow(fieldnames)
+        w.writerows(rows_iter)
+
 def parse_yaml(yamlfile):
     res = None
     with open(yamlfile, 'r') as yamlf:

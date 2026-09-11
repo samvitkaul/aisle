@@ -1,0 +1,26 @@
+NVL72:
+  host        : dummy_host@config/tests/dummy.yml
+  host_mem    : lpddr5x@config/tests/memory.yml
+  gpu         : B100@config/tests/gpus.yml
+  nvme        : dummy_nvme@config/tests/dummy.yml
+  nic         : dummy_nic@config/tests/dummy.yml
+  num_gpu     : 72
+  num_nvme    : 1
+  num_nics    : 2
+  num_host    : 36
+  num_host_mem: 1
+  gpu_interconnect : nvswitch_8gpu@config/tests/blade_fabrics.yml
+
+HGX8_NVSwitch:
+  host             : dummy_host@config/tests/dummy.yml
+  host_mem         : lpddr5x@config/tests/memory.yml
+  gpu              : B100@config/tests/gpus.yml
+  nvme             : dummy_nvme@config/tests/dummy.yml
+  nic              : dummy_nic@config/tests/dummy.yml
+  num_gpu          : 8
+  num_nvme         : 1
+  num_nics         : 2
+  num_host         : 2
+  num_host_mem     : 1
+  gpu_interconnect : nvswitch_8gpu@config/tests/blade_fabrics.yml
+

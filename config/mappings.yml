@@ -1,0 +1,27 @@
+
+op_removal_spec:
+  - Identity
+  - Constant
+
+op_fusion_spec:
+  - [Add, LayerNormalization, Matmul, Add, Matmul, Add, Gelu]
+  - [Add, LayerNormalization, Matmul, Add, Split]
+  - [Add, LayerNormalization, Matmul]
+  - [Add, LayerNormalization]
+  - [Reshape, Transpose, Transpose]
+  - [Reshape, Transpose]
+  - [Transpose, Transpose]
+  - [Matmul, Add, Matmul, Add, Gelu]
+  - [Matmul, Matmul]
+  - [Matmul, Mul, Softmax]
+  - [Matmul, Mul]
+  - [Matmul, Add, Split]
+  - [Matmul, Add, Gelu]
+  - [Matmul, Add]
+  - [Matmul, Gelu, Add]
+  - [Matmul, Transpose, Reshape]
+
+rsrc_spec:
+  compute:
+    tensor: [ Matmul ]
+    cuda  : [ Split, Mul, Add, Gather, Gelu, LayerNormalization, Reshape, Softmax, Transpose, Concat ]
